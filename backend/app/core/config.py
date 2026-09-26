@@ -1,4 +1,5 @@
 import warnings
+from pathlib import Path
 from typing import Literal, Self
 
 from pydantic import (
@@ -25,6 +26,18 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 8
     FRONTEND_HOST: str = "http://localhost:5173"
     FASTAPI_ENV: Literal["development"] | None = None
+
+    STORAGE_PROVIDER: Literal["local", "s3"] = "local"
+    STORAGE_LOCAL_ROOT: Path = Path("media")
+    STORAGE_LOCAL_URL_PREFIX: str = "/media"
+    STORAGE_MAX_FILE_SIZE_BYTES: int = 10 * 1024 * 1024
+    STORAGE_S3_BUCKET: str | None = None
+    STORAGE_S3_REGION: str = "us-east-1"
+    STORAGE_S3_ENDPOINT_URL: str | None = None
+    STORAGE_S3_ACCESS_KEY_ID: str | None = None
+    STORAGE_S3_SECRET_ACCESS_KEY: str | None = None
+    STORAGE_S3_PUBLIC_BASE_URL: str | None = None
+    STORAGE_S3_SIGNED_URL_TTL_SECONDS: int = 300
 
     PROJECT_NAME: str
     SENTRY_DSN: HttpUrl | None = None
@@ -84,6 +97,15 @@ class Settings(BaseSettings):
         self._check_default_secret(
             "FIRST_SUPERUSER_PASSWORD", self.FIRST_SUPERUSER_PASSWORD
         )
+
+        if self.STORAGE_MAX_FILE_SIZE_BYTES <= 0:
+            raise ValueError("STORAGE_MAX_FILE_SIZE_BYTES must be greater than zero")
+        if self.STORAGE_S3_SIGNED_URL_TTL_SECONDS <= 0:
+            raise ValueError(
+                "STORAGE_S3_SIGNED_URL_TTL_SECONDS must be greater than zero"
+            )
+        if self.STORAGE_PROVIDER == "s3" and not self.STORAGE_S3_BUCKET:
+            raise ValueError("STORAGE_S3_BUCKET is required when STORAGE_PROVIDER=s3")
 
         return self
 

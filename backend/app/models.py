@@ -1,9 +1,10 @@
 import uuid
 from datetime import UTC, datetime
+from decimal import Decimal
 from typing import Annotated
 
 from pydantic import EmailStr, StringConstraints
-from sqlalchemy import DateTime
+from sqlalchemy import DateTime, Numeric
 from sqlmodel import Field, Relationship, SQLModel
 
 
@@ -218,6 +219,233 @@ class ItemPublic(ItemBase):
 
 class ItemsPublic(SQLModel):
     data: list[ItemPublic]
+    count: int
+
+
+# ---------------------------------------------------------------------------
+# TileVision product catalog
+# ---------------------------------------------------------------------------
+
+
+class CategoryBase(SQLModel):
+    name: str = Field(min_length=1, max_length=100)
+    slug: str = Field(min_length=1, max_length=120)
+    description: str | None = Field(default=None, max_length=500)
+    is_active: bool = True
+
+
+class CategoryCreate(CategoryBase):
+    pass
+
+
+class CategoryUpdate(SQLModel):
+    name: str | None = Field(default=None, min_length=1, max_length=100)
+    slug: str | None = Field(default=None, min_length=1, max_length=120)
+    description: str | None = Field(default=None, max_length=500)
+    is_active: bool | None = None
+
+
+class Category(CategoryBase, table=True):
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    name: str = Field(min_length=1, max_length=100, unique=True, index=True)
+    slug: str = Field(min_length=1, max_length=120, unique=True, index=True)
+    created_at: datetime | None = Field(
+        default_factory=get_datetime_utc,
+        sa_type=DateTime(timezone=True),  # type: ignore
+    )
+    products: list[Product] = Relationship(back_populates="category")
+
+
+class CategoryPublic(CategoryBase):
+    id: uuid.UUID
+    created_at: datetime | None = None
+
+
+class CategoriesPublic(SQLModel):
+    data: list[CategoryPublic]
+    count: int
+
+
+class BrandBase(SQLModel):
+    name: str = Field(min_length=1, max_length=120)
+    slug: str = Field(min_length=1, max_length=140)
+    description: str | None = Field(default=None, max_length=500)
+    is_active: bool = True
+
+
+class BrandCreate(BrandBase):
+    pass
+
+
+class BrandUpdate(SQLModel):
+    name: str | None = Field(default=None, min_length=1, max_length=120)
+    slug: str | None = Field(default=None, min_length=1, max_length=140)
+    description: str | None = Field(default=None, max_length=500)
+    is_active: bool | None = None
+
+
+class Brand(BrandBase, table=True):
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    name: str = Field(min_length=1, max_length=120, unique=True, index=True)
+    slug: str = Field(min_length=1, max_length=140, unique=True, index=True)
+    created_at: datetime | None = Field(
+        default_factory=get_datetime_utc,
+        sa_type=DateTime(timezone=True),  # type: ignore
+    )
+    products: list[Product] = Relationship(back_populates="brand")
+
+
+class BrandPublic(BrandBase):
+    id: uuid.UUID
+    created_at: datetime | None = None
+
+
+class BrandsPublic(SQLModel):
+    data: list[BrandPublic]
+    count: int
+
+
+class ProductBase(SQLModel):
+    name: str = Field(min_length=1, max_length=255)
+    sku: str = Field(min_length=1, max_length=64)
+    slug: str = Field(min_length=1, max_length=255)
+    description: str | None = Field(default=None, max_length=4000)
+    category_id: uuid.UUID
+    brand_id: uuid.UUID | None = None
+    product_type: str | None = Field(default=None, max_length=64)
+    material: str | None = Field(default=None, max_length=64)
+    finish: str | None = Field(default=None, max_length=64)
+    usage_area: str | None = Field(default=None, max_length=64)
+    color_family: str | None = Field(default=None, max_length=64)
+    width_mm: int | None = Field(default=None, gt=0)
+    height_mm: int | None = Field(default=None, gt=0)
+    thickness_mm: int | None = Field(default=None, gt=0)
+    rectified: bool = False
+    anti_slip_rating: str | None = Field(default=None, max_length=32)
+    water_absorption_percent: Decimal | None = Field(
+        default=None, sa_type=Numeric(5, 2), ge=0, le=100
+    )
+    pieces_per_box: int | None = Field(default=None, gt=0)
+    sqm_per_box: Decimal | None = Field(default=None, sa_type=Numeric(10, 3), gt=0)
+    kg_per_box: Decimal | None = Field(default=None, sa_type=Numeric(10, 3), gt=0)
+    country_of_origin: str | None = Field(default=None, max_length=100)
+    price: Decimal | None = Field(default=None, sa_type=Numeric(12, 2), ge=0)
+    stock_quantity: int = Field(default=0, ge=0)
+    is_active: bool = True
+    is_featured: bool = False
+
+
+class ProductCreate(ProductBase):
+    pass
+
+
+class ProductUpdate(SQLModel):
+    name: str | None = Field(default=None, min_length=1, max_length=255)
+    sku: str | None = Field(default=None, min_length=1, max_length=64)
+    slug: str | None = Field(default=None, min_length=1, max_length=255)
+    description: str | None = Field(default=None, max_length=4000)
+    category_id: uuid.UUID | None = None
+    brand_id: uuid.UUID | None = None
+    product_type: str | None = Field(default=None, max_length=64)
+    material: str | None = Field(default=None, max_length=64)
+    finish: str | None = Field(default=None, max_length=64)
+    usage_area: str | None = Field(default=None, max_length=64)
+    color_family: str | None = Field(default=None, max_length=64)
+    width_mm: int | None = Field(default=None, gt=0)
+    height_mm: int | None = Field(default=None, gt=0)
+    thickness_mm: int | None = Field(default=None, gt=0)
+    rectified: bool | None = None
+    anti_slip_rating: str | None = Field(default=None, max_length=32)
+    water_absorption_percent: Decimal | None = Field(
+        default=None, sa_type=Numeric(5, 2), ge=0, le=100
+    )
+    pieces_per_box: int | None = Field(default=None, gt=0)
+    sqm_per_box: Decimal | None = Field(default=None, sa_type=Numeric(10, 3), gt=0)
+    kg_per_box: Decimal | None = Field(default=None, sa_type=Numeric(10, 3), gt=0)
+    country_of_origin: str | None = Field(default=None, max_length=100)
+    price: Decimal | None = Field(default=None, sa_type=Numeric(12, 2), ge=0)
+    stock_quantity: int | None = Field(default=None, ge=0)
+    is_active: bool | None = None
+    is_featured: bool | None = None
+
+
+class Product(ProductBase, table=True):
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    created_at: datetime | None = Field(
+        default_factory=get_datetime_utc,
+        sa_type=DateTime(timezone=True),  # type: ignore
+    )
+    updated_at: datetime | None = Field(
+        default_factory=get_datetime_utc,
+        sa_type=DateTime(timezone=True),  # type: ignore
+    )
+    sku: str = Field(min_length=1, max_length=64, unique=True, index=True)
+    slug: str = Field(min_length=1, max_length=255, unique=True, index=True)
+    category_id: uuid.UUID = Field(
+        foreign_key="category.id", nullable=False, index=True, ondelete="RESTRICT"
+    )
+    brand_id: uuid.UUID | None = Field(
+        default=None, foreign_key="brand.id", index=True, ondelete="RESTRICT"
+    )
+    category: Category | None = Relationship(back_populates="products")
+    brand: Brand | None = Relationship(back_populates="products")
+    images: list[ProductImage] = Relationship(
+        back_populates="product", cascade_delete=True
+    )
+
+
+class ProductPublic(ProductBase):
+    id: uuid.UUID
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
+
+
+class ProductsPublic(SQLModel):
+    data: list[ProductPublic]
+    count: int
+
+
+class ProductImageBase(SQLModel):
+    product_id: uuid.UUID
+    storage_key: str = Field(min_length=1, max_length=1024)
+    url: str | None = Field(default=None, max_length=2048)
+    alt_text: str | None = Field(default=None, max_length=255)
+    sort_order: int = Field(default=0, ge=0)
+    is_primary: bool = False
+
+
+class ProductImageCreate(ProductImageBase):
+    pass
+
+
+class ProductImageUpdate(SQLModel):
+    product_id: uuid.UUID | None = None
+    storage_key: str | None = Field(default=None, min_length=1, max_length=1024)
+    url: str | None = Field(default=None, max_length=2048)
+    alt_text: str | None = Field(default=None, max_length=255)
+    sort_order: int | None = Field(default=None, ge=0)
+    is_primary: bool | None = None
+
+
+class ProductImage(ProductImageBase, table=True):
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    created_at: datetime | None = Field(
+        default_factory=get_datetime_utc,
+        sa_type=DateTime(timezone=True),  # type: ignore
+    )
+    product_id: uuid.UUID = Field(
+        foreign_key="product.id", nullable=False, index=True, ondelete="CASCADE"
+    )
+    product: Product | None = Relationship(back_populates="images")
+
+
+class ProductImagePublic(ProductImageBase):
+    id: uuid.UUID
+    created_at: datetime | None = None
+
+
+class ProductImagesPublic(SQLModel):
+    data: list[ProductImagePublic]
     count: int
 
 

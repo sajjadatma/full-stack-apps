@@ -139,7 +139,7 @@ A product is one SKU of tile/ceramic.
 | `height_mm` | integer | no | Nominal height. |
 | `thickness_mm` | integer | no | Nominal thickness. |
 | `pieces_per_box` | integer | no | Packaging. |
-| `m2_per_box` | decimal | no | Coverage. |
+| `sqm_per_box` | decimal | no | Coverage in square meters. |
 | `kg_per_box` | decimal | no | Shipping weight. |
 | `finish` | enum | no | `matte`, `glossy`, `polished`, `satin`, `textured`, `anti_slip`. |
 | `color` | string(60) | no | Primary color/name. |

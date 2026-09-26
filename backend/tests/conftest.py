@@ -2,12 +2,12 @@ from collections.abc import Generator
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlmodel import Session, col, delete, select
+from sqlmodel import Session, col, delete
 
 from app.core.config import settings
 from app.core.db import engine, init_db
 from app.main import app
-from app.models import Item, Role, User
+from app.models import Brand, Category, Item, Product, Role, User
 from tests.utils.user import authentication_token_from_email
 from tests.utils.utils import get_superuser_token_headers
 
@@ -19,6 +19,9 @@ def db() -> Generator[Session]:
         yield session
         statement = delete(Item)
         session.execute(statement)
+        session.execute(delete(Product))
+        session.execute(delete(Brand))
+        session.execute(delete(Category))
         statement = delete(User).where(User.email != settings.FIRST_SUPERUSER)
         session.execute(statement)
         session.commit()

@@ -209,6 +209,7 @@ def test_product_update_and_list_schemas_support_partial_update() -> None:
         sku="CAR-1",
         slug="carrara",
         category_id=uuid4(),
+        stock_state="in_stock",
     )
 
     assert ProductUpdate(price=Decimal("31.25")).model_dump(exclude_unset=True) == {

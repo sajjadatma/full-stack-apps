@@ -6,6 +6,7 @@ from app.api.routes import (
     items,
     login,
     private,
+    products,
     roles,
     users,
     utils,
@@ -20,6 +21,7 @@ api_router.include_router(utils.router)
 api_router.include_router(items.router)
 api_router.include_router(categories.router)
 api_router.include_router(brands.router)
+api_router.include_router(products.router)
 
 
 if settings.FASTAPI_ENV == "development":

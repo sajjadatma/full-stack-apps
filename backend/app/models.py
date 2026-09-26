@@ -331,6 +331,7 @@ class ProductBase(SQLModel):
     country_of_origin: str | None = Field(default=None, max_length=100)
     price: Decimal | None = Field(default=None, sa_type=Numeric(12, 2), ge=0)
     stock_quantity: int = Field(default=0, ge=0)
+    low_stock_threshold: int | None = Field(default=None, ge=0)
     is_active: bool = True
     is_featured: bool = False
 
@@ -365,6 +366,7 @@ class ProductUpdate(SQLModel):
     country_of_origin: str | None = Field(default=None, max_length=100)
     price: Decimal | None = Field(default=None, sa_type=Numeric(12, 2), ge=0)
     stock_quantity: int | None = Field(default=None, ge=0)
+    low_stock_threshold: int | None = Field(default=None, ge=0)
     is_active: bool | None = None
     is_featured: bool | None = None
 
@@ -398,6 +400,7 @@ class ProductPublic(ProductBase):
     id: uuid.UUID
     created_at: datetime | None = None
     updated_at: datetime | None = None
+    stock_state: str
 
 
 class ProductsPublic(SQLModel):

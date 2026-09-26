@@ -158,7 +158,7 @@ A product is one SKU of tile/ceramic.
 | `compare_at_price` | decimal | no | Optional "was" price. |
 | `stock_quantity` | decimal | yes | Non-negative. |
 | `stock_unit` | enum | yes | `m2`, `box`, `piece`. |
-| `low_stock_threshold` | decimal | no | For the derived availability label. |
+| `low_stock_threshold` | integer | no | For the derived availability label. |
 | `status` | enum | yes | `draft`, `published`, `archived`. |
 | `created_at` / `updated_at` | timestamp | yes | UTC. |
 

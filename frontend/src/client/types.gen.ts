@@ -35,6 +35,182 @@ export type Body_login_login_access_token = {
 };
 
 /**
+ * BrandCreate
+ */
+export type BrandCreate = {
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Slug
+     */
+    slug: string;
+    /**
+     * Description
+     */
+    description?: string | null;
+    /**
+     * Is Active
+     */
+    is_active?: boolean;
+};
+
+/**
+ * BrandPublic
+ */
+export type BrandPublic = {
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Slug
+     */
+    slug: string;
+    /**
+     * Description
+     */
+    description?: string | null;
+    /**
+     * Is Active
+     */
+    is_active?: boolean;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Created At
+     */
+    created_at?: string | null;
+};
+
+/**
+ * BrandUpdate
+ */
+export type BrandUpdate = {
+    /**
+     * Name
+     */
+    name?: string | null;
+    /**
+     * Slug
+     */
+    slug?: string | null;
+    /**
+     * Description
+     */
+    description?: string | null;
+    /**
+     * Is Active
+     */
+    is_active?: boolean | null;
+};
+
+/**
+ * BrandsPublic
+ */
+export type BrandsPublic = {
+    /**
+     * Data
+     */
+    data: Array<BrandPublic>;
+    /**
+     * Count
+     */
+    count: number;
+};
+
+/**
+ * CategoriesPublic
+ */
+export type CategoriesPublic = {
+    /**
+     * Data
+     */
+    data: Array<CategoryPublic>;
+    /**
+     * Count
+     */
+    count: number;
+};
+
+/**
+ * CategoryCreate
+ */
+export type CategoryCreate = {
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Slug
+     */
+    slug: string;
+    /**
+     * Description
+     */
+    description?: string | null;
+    /**
+     * Is Active
+     */
+    is_active?: boolean;
+};
+
+/**
+ * CategoryPublic
+ */
+export type CategoryPublic = {
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Slug
+     */
+    slug: string;
+    /**
+     * Description
+     */
+    description?: string | null;
+    /**
+     * Is Active
+     */
+    is_active?: boolean;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Created At
+     */
+    created_at?: string | null;
+};
+
+/**
+ * CategoryUpdate
+ */
+export type CategoryUpdate = {
+    /**
+     * Name
+     */
+    name?: string | null;
+    /**
+     * Slug
+     */
+    slug?: string | null;
+    /**
+     * Description
+     */
+    description?: string | null;
+    /**
+     * Is Active
+     */
+    is_active?: boolean | null;
+};
+
+/**
  * HTTPValidationError
  */
 export type HTTPValidationError = {
@@ -174,6 +350,366 @@ export type PrivateUserCreate = {
      * Is Verified
      */
     is_verified?: boolean;
+};
+
+/**
+ * ProductCreate
+ */
+export type ProductCreate = {
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Sku
+     */
+    sku: string;
+    /**
+     * Slug
+     */
+    slug: string;
+    /**
+     * Description
+     */
+    description?: string | null;
+    /**
+     * Category Id
+     */
+    category_id: string;
+    /**
+     * Brand Id
+     */
+    brand_id?: string | null;
+    /**
+     * Product Type
+     */
+    product_type?: string | null;
+    /**
+     * Material
+     */
+    material?: string | null;
+    /**
+     * Finish
+     */
+    finish?: string | null;
+    /**
+     * Usage Area
+     */
+    usage_area?: string | null;
+    /**
+     * Color Family
+     */
+    color_family?: string | null;
+    /**
+     * Width Mm
+     */
+    width_mm?: number | null;
+    /**
+     * Height Mm
+     */
+    height_mm?: number | null;
+    /**
+     * Thickness Mm
+     */
+    thickness_mm?: number | null;
+    /**
+     * Rectified
+     */
+    rectified?: boolean;
+    /**
+     * Anti Slip Rating
+     */
+    anti_slip_rating?: string | null;
+    /**
+     * Water Absorption Percent
+     */
+    water_absorption_percent?: number | string | null;
+    /**
+     * Pieces Per Box
+     */
+    pieces_per_box?: number | null;
+    /**
+     * Sqm Per Box
+     */
+    sqm_per_box?: number | string | null;
+    /**
+     * Kg Per Box
+     */
+    kg_per_box?: number | string | null;
+    /**
+     * Country Of Origin
+     */
+    country_of_origin?: string | null;
+    /**
+     * Price
+     */
+    price?: number | string | null;
+    /**
+     * Stock Quantity
+     */
+    stock_quantity?: number;
+    /**
+     * Low Stock Threshold
+     */
+    low_stock_threshold?: number | null;
+    /**
+     * Is Active
+     */
+    is_active?: boolean;
+    /**
+     * Is Featured
+     */
+    is_featured?: boolean;
+};
+
+/**
+ * ProductPublic
+ */
+export type ProductPublic = {
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Sku
+     */
+    sku: string;
+    /**
+     * Slug
+     */
+    slug: string;
+    /**
+     * Description
+     */
+    description?: string | null;
+    /**
+     * Category Id
+     */
+    category_id: string;
+    /**
+     * Brand Id
+     */
+    brand_id?: string | null;
+    /**
+     * Product Type
+     */
+    product_type?: string | null;
+    /**
+     * Material
+     */
+    material?: string | null;
+    /**
+     * Finish
+     */
+    finish?: string | null;
+    /**
+     * Usage Area
+     */
+    usage_area?: string | null;
+    /**
+     * Color Family
+     */
+    color_family?: string | null;
+    /**
+     * Width Mm
+     */
+    width_mm?: number | null;
+    /**
+     * Height Mm
+     */
+    height_mm?: number | null;
+    /**
+     * Thickness Mm
+     */
+    thickness_mm?: number | null;
+    /**
+     * Rectified
+     */
+    rectified?: boolean;
+    /**
+     * Anti Slip Rating
+     */
+    anti_slip_rating?: string | null;
+    /**
+     * Water Absorption Percent
+     */
+    water_absorption_percent?: string | null;
+    /**
+     * Pieces Per Box
+     */
+    pieces_per_box?: number | null;
+    /**
+     * Sqm Per Box
+     */
+    sqm_per_box?: string | null;
+    /**
+     * Kg Per Box
+     */
+    kg_per_box?: string | null;
+    /**
+     * Country Of Origin
+     */
+    country_of_origin?: string | null;
+    /**
+     * Price
+     */
+    price?: string | null;
+    /**
+     * Stock Quantity
+     */
+    stock_quantity?: number;
+    /**
+     * Low Stock Threshold
+     */
+    low_stock_threshold?: number | null;
+    /**
+     * Is Active
+     */
+    is_active?: boolean;
+    /**
+     * Is Featured
+     */
+    is_featured?: boolean;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Created At
+     */
+    created_at?: string | null;
+    /**
+     * Updated At
+     */
+    updated_at?: string | null;
+    /**
+     * Stock State
+     */
+    stock_state: string;
+};
+
+/**
+ * ProductUpdate
+ */
+export type ProductUpdate = {
+    /**
+     * Name
+     */
+    name?: string | null;
+    /**
+     * Sku
+     */
+    sku?: string | null;
+    /**
+     * Slug
+     */
+    slug?: string | null;
+    /**
+     * Description
+     */
+    description?: string | null;
+    /**
+     * Category Id
+     */
+    category_id?: string | null;
+    /**
+     * Brand Id
+     */
+    brand_id?: string | null;
+    /**
+     * Product Type
+     */
+    product_type?: string | null;
+    /**
+     * Material
+     */
+    material?: string | null;
+    /**
+     * Finish
+     */
+    finish?: string | null;
+    /**
+     * Usage Area
+     */
+    usage_area?: string | null;
+    /**
+     * Color Family
+     */
+    color_family?: string | null;
+    /**
+     * Width Mm
+     */
+    width_mm?: number | null;
+    /**
+     * Height Mm
+     */
+    height_mm?: number | null;
+    /**
+     * Thickness Mm
+     */
+    thickness_mm?: number | null;
+    /**
+     * Rectified
+     */
+    rectified?: boolean | null;
+    /**
+     * Anti Slip Rating
+     */
+    anti_slip_rating?: string | null;
+    /**
+     * Water Absorption Percent
+     */
+    water_absorption_percent?: number | string | null;
+    /**
+     * Pieces Per Box
+     */
+    pieces_per_box?: number | null;
+    /**
+     * Sqm Per Box
+     */
+    sqm_per_box?: number | string | null;
+    /**
+     * Kg Per Box
+     */
+    kg_per_box?: number | string | null;
+    /**
+     * Country Of Origin
+     */
+    country_of_origin?: string | null;
+    /**
+     * Price
+     */
+    price?: number | string | null;
+    /**
+     * Stock Quantity
+     */
+    stock_quantity?: number | null;
+    /**
+     * Low Stock Threshold
+     */
+    low_stock_threshold?: number | null;
+    /**
+     * Is Active
+     */
+    is_active?: boolean | null;
+    /**
+     * Is Featured
+     */
+    is_featured?: boolean | null;
+};
+
+/**
+ * ProductsPublic
+ */
+export type ProductsPublic = {
+    /**
+     * Data
+     */
+    data: Array<ProductPublic>;
+    /**
+     * Count
+     */
+    count: number;
 };
 
 /**
@@ -1319,6 +1855,547 @@ export type itemsUpdateItemResponses = {
 };
 
 export type itemsUpdateItemResponse = itemsUpdateItemResponses[keyof itemsUpdateItemResponses];
+
+export type categoriesReadCategoriesData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Skip
+         */
+        skip?: number;
+        /**
+         * Limit
+         */
+        limit?: number;
+    };
+    url: '/api/v1/categories/';
+};
+
+export type categoriesReadCategoriesErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type categoriesReadCategoriesError = categoriesReadCategoriesErrors[keyof categoriesReadCategoriesErrors];
+
+export type categoriesReadCategoriesResponses = {
+    /**
+     * Successful Response
+     */
+    200: CategoriesPublic;
+};
+
+export type categoriesReadCategoriesResponse = categoriesReadCategoriesResponses[keyof categoriesReadCategoriesResponses];
+
+export type categoriesCreateCategoryData = {
+    body: CategoryCreate;
+    path?: never;
+    query?: never;
+    url: '/api/v1/categories/';
+};
+
+export type categoriesCreateCategoryErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type categoriesCreateCategoryError = categoriesCreateCategoryErrors[keyof categoriesCreateCategoryErrors];
+
+export type categoriesCreateCategoryResponses = {
+    /**
+     * Successful Response
+     */
+    201: CategoryPublic;
+};
+
+export type categoriesCreateCategoryResponse = categoriesCreateCategoryResponses[keyof categoriesCreateCategoryResponses];
+
+export type categoriesDeleteCategoryData = {
+    body?: never;
+    path: {
+        /**
+         * Category Id
+         */
+        category_id: string;
+    };
+    query?: never;
+    url: '/api/v1/categories/{category_id}';
+};
+
+export type categoriesDeleteCategoryErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type categoriesDeleteCategoryError = categoriesDeleteCategoryErrors[keyof categoriesDeleteCategoryErrors];
+
+export type categoriesDeleteCategoryResponses = {
+    /**
+     * Successful Response
+     */
+    200: Message;
+};
+
+export type categoriesDeleteCategoryResponse = categoriesDeleteCategoryResponses[keyof categoriesDeleteCategoryResponses];
+
+export type categoriesReadCategoryData = {
+    body?: never;
+    path: {
+        /**
+         * Category Id
+         */
+        category_id: string;
+    };
+    query?: never;
+    url: '/api/v1/categories/{category_id}';
+};
+
+export type categoriesReadCategoryErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type categoriesReadCategoryError = categoriesReadCategoryErrors[keyof categoriesReadCategoryErrors];
+
+export type categoriesReadCategoryResponses = {
+    /**
+     * Successful Response
+     */
+    200: CategoryPublic;
+};
+
+export type categoriesReadCategoryResponse = categoriesReadCategoryResponses[keyof categoriesReadCategoryResponses];
+
+export type categoriesUpdateCategoryData = {
+    body: CategoryUpdate;
+    path: {
+        /**
+         * Category Id
+         */
+        category_id: string;
+    };
+    query?: never;
+    url: '/api/v1/categories/{category_id}';
+};
+
+export type categoriesUpdateCategoryErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type categoriesUpdateCategoryError = categoriesUpdateCategoryErrors[keyof categoriesUpdateCategoryErrors];
+
+export type categoriesUpdateCategoryResponses = {
+    /**
+     * Successful Response
+     */
+    200: CategoryPublic;
+};
+
+export type categoriesUpdateCategoryResponse = categoriesUpdateCategoryResponses[keyof categoriesUpdateCategoryResponses];
+
+export type brandsReadBrandsData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Skip
+         */
+        skip?: number;
+        /**
+         * Limit
+         */
+        limit?: number;
+    };
+    url: '/api/v1/brands/';
+};
+
+export type brandsReadBrandsErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type brandsReadBrandsError = brandsReadBrandsErrors[keyof brandsReadBrandsErrors];
+
+export type brandsReadBrandsResponses = {
+    /**
+     * Successful Response
+     */
+    200: BrandsPublic;
+};
+
+export type brandsReadBrandsResponse = brandsReadBrandsResponses[keyof brandsReadBrandsResponses];
+
+export type brandsCreateBrandData = {
+    body: BrandCreate;
+    path?: never;
+    query?: never;
+    url: '/api/v1/brands/';
+};
+
+export type brandsCreateBrandErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type brandsCreateBrandError = brandsCreateBrandErrors[keyof brandsCreateBrandErrors];
+
+export type brandsCreateBrandResponses = {
+    /**
+     * Successful Response
+     */
+    201: BrandPublic;
+};
+
+export type brandsCreateBrandResponse = brandsCreateBrandResponses[keyof brandsCreateBrandResponses];
+
+export type brandsDeleteBrandData = {
+    body?: never;
+    path: {
+        /**
+         * Brand Id
+         */
+        brand_id: string;
+    };
+    query?: never;
+    url: '/api/v1/brands/{brand_id}';
+};
+
+export type brandsDeleteBrandErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type brandsDeleteBrandError = brandsDeleteBrandErrors[keyof brandsDeleteBrandErrors];
+
+export type brandsDeleteBrandResponses = {
+    /**
+     * Successful Response
+     */
+    200: Message;
+};
+
+export type brandsDeleteBrandResponse = brandsDeleteBrandResponses[keyof brandsDeleteBrandResponses];
+
+export type brandsReadBrandData = {
+    body?: never;
+    path: {
+        /**
+         * Brand Id
+         */
+        brand_id: string;
+    };
+    query?: never;
+    url: '/api/v1/brands/{brand_id}';
+};
+
+export type brandsReadBrandErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type brandsReadBrandError = brandsReadBrandErrors[keyof brandsReadBrandErrors];
+
+export type brandsReadBrandResponses = {
+    /**
+     * Successful Response
+     */
+    200: BrandPublic;
+};
+
+export type brandsReadBrandResponse = brandsReadBrandResponses[keyof brandsReadBrandResponses];
+
+export type brandsUpdateBrandData = {
+    body: BrandUpdate;
+    path: {
+        /**
+         * Brand Id
+         */
+        brand_id: string;
+    };
+    query?: never;
+    url: '/api/v1/brands/{brand_id}';
+};
+
+export type brandsUpdateBrandErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type brandsUpdateBrandError = brandsUpdateBrandErrors[keyof brandsUpdateBrandErrors];
+
+export type brandsUpdateBrandResponses = {
+    /**
+     * Successful Response
+     */
+    200: BrandPublic;
+};
+
+export type brandsUpdateBrandResponse = brandsUpdateBrandResponses[keyof brandsUpdateBrandResponses];
+
+export type productsReadProductsData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Skip
+         */
+        skip?: number;
+        /**
+         * Limit
+         */
+        limit?: number;
+        /**
+         * Q
+         */
+        q?: string | null;
+        /**
+         * Category Id
+         */
+        category_id?: string | null;
+        /**
+         * Brand Id
+         */
+        brand_id?: string | null;
+        /**
+         * Product Type
+         */
+        product_type?: string | null;
+        /**
+         * Material
+         */
+        material?: string | null;
+        /**
+         * Finish
+         */
+        finish?: string | null;
+        /**
+         * Usage Area
+         */
+        usage_area?: string | null;
+        /**
+         * Color Family
+         */
+        color_family?: string | null;
+        /**
+         * Width Mm
+         */
+        width_mm?: number | null;
+        /**
+         * Height Mm
+         */
+        height_mm?: number | null;
+        /**
+         * Thickness Mm
+         */
+        thickness_mm?: number | null;
+        /**
+         * Min Price
+         */
+        min_price?: number | string | null;
+        /**
+         * Max Price
+         */
+        max_price?: number | string | null;
+        /**
+         * Stock State
+         */
+        stock_state?: 'in_stock' | 'low_stock' | 'out_of_stock' | null;
+        /**
+         * Is Active
+         */
+        is_active?: boolean | null;
+        /**
+         * Is Featured
+         */
+        is_featured?: boolean | null;
+    };
+    url: '/api/v1/products/';
+};
+
+export type productsReadProductsErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type productsReadProductsError = productsReadProductsErrors[keyof productsReadProductsErrors];
+
+export type productsReadProductsResponses = {
+    /**
+     * Successful Response
+     */
+    200: ProductsPublic;
+};
+
+export type productsReadProductsResponse = productsReadProductsResponses[keyof productsReadProductsResponses];
+
+export type productsCreateProductData = {
+    body: ProductCreate;
+    path?: never;
+    query?: never;
+    url: '/api/v1/products/';
+};
+
+export type productsCreateProductErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type productsCreateProductError = productsCreateProductErrors[keyof productsCreateProductErrors];
+
+export type productsCreateProductResponses = {
+    /**
+     * Successful Response
+     */
+    201: ProductPublic;
+};
+
+export type productsCreateProductResponse = productsCreateProductResponses[keyof productsCreateProductResponses];
+
+export type productsDeleteProductData = {
+    body?: never;
+    path: {
+        /**
+         * Product Id
+         */
+        product_id: string;
+    };
+    query?: never;
+    url: '/api/v1/products/{product_id}';
+};
+
+export type productsDeleteProductErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type productsDeleteProductError = productsDeleteProductErrors[keyof productsDeleteProductErrors];
+
+export type productsDeleteProductResponses = {
+    /**
+     * Successful Response
+     */
+    200: Message;
+};
+
+export type productsDeleteProductResponse = productsDeleteProductResponses[keyof productsDeleteProductResponses];
+
+export type productsReadProductData = {
+    body?: never;
+    path: {
+        /**
+         * Product Id
+         */
+        product_id: string;
+    };
+    query?: never;
+    url: '/api/v1/products/{product_id}';
+};
+
+export type productsReadProductErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type productsReadProductError = productsReadProductErrors[keyof productsReadProductErrors];
+
+export type productsReadProductResponses = {
+    /**
+     * Successful Response
+     */
+    200: ProductPublic;
+};
+
+export type productsReadProductResponse = productsReadProductResponses[keyof productsReadProductResponses];
+
+export type productsUpdateProductData = {
+    body: ProductUpdate;
+    path: {
+        /**
+         * Product Id
+         */
+        product_id: string;
+    };
+    query?: never;
+    url: '/api/v1/products/{product_id}';
+};
+
+export type productsUpdateProductErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type productsUpdateProductError = productsUpdateProductErrors[keyof productsUpdateProductErrors];
+
+export type productsUpdateProductResponses = {
+    /**
+     * Successful Response
+     */
+    200: ProductPublic;
+};
+
+export type productsUpdateProductResponse = productsUpdateProductResponses[keyof productsUpdateProductResponses];
+
+export type productsDeactivateProductData = {
+    body?: never;
+    path: {
+        /**
+         * Product Id
+         */
+        product_id: string;
+    };
+    query?: never;
+    url: '/api/v1/products/{product_id}/deactivate';
+};
+
+export type productsDeactivateProductErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type productsDeactivateProductError = productsDeactivateProductErrors[keyof productsDeactivateProductErrors];
+
+export type productsDeactivateProductResponses = {
+    /**
+     * Successful Response
+     */
+    200: ProductPublic;
+};
+
+export type productsDeactivateProductResponse = productsDeactivateProductResponses[keyof productsDeactivateProductResponses];
 
 export type privateCreateUserData = {
     body: PrivateUserCreate;

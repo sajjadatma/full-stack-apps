@@ -33,6 +33,13 @@ ITEMS_UPDATE_ANY = "items.update_any"
 ITEMS_DELETE_OWN = "items.delete_own"
 ITEMS_DELETE_ANY = "items.delete_any"
 
+# Product catalog reference data and products
+PRODUCTS_READ = "products.read"
+PRODUCTS_READ_ANY = "products.read_any"
+PRODUCTS_CREATE = "products.create"
+PRODUCTS_UPDATE = "products.update"
+PRODUCTS_DELETE = "products.delete"
+
 # Roles
 ROLES_READ = "roles.read"
 ROLES_CREATE = "roles.create"
@@ -69,6 +76,11 @@ PERMISSIONS: Final[tuple[PermissionInfo, ...]] = (
     PermissionInfo(ITEMS_UPDATE_ANY, "Update all items"),
     PermissionInfo(ITEMS_DELETE_OWN, "Delete own items"),
     PermissionInfo(ITEMS_DELETE_ANY, "Delete all items"),
+    PermissionInfo(PRODUCTS_READ, "Read the active product catalog"),
+    PermissionInfo(PRODUCTS_READ_ANY, "Read all product catalog data"),
+    PermissionInfo(PRODUCTS_CREATE, "Create product catalog data"),
+    PermissionInfo(PRODUCTS_UPDATE, "Update product catalog data"),
+    PermissionInfo(PRODUCTS_DELETE, "Delete product catalog data"),
     PermissionInfo(ROLES_READ, "View roles and permissions"),
     PermissionInfo(ROLES_CREATE, "Create roles"),
     PermissionInfo(ROLES_UPDATE, "Update roles"),
@@ -104,6 +116,7 @@ DEFAULT_USER_PERMISSIONS: Final[frozenset[str]] = frozenset(
         ITEMS_CREATE,
         ITEMS_UPDATE_OWN,
         ITEMS_DELETE_OWN,
+        PRODUCTS_READ,
     }
 )
 

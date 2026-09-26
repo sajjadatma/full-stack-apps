@@ -37,14 +37,18 @@ the final active superuser cannot be deactivated, demoted, or deleted.
 | `items.create` | Create items owned by the authenticated user |
 | `items.update_own` / `items.update_any` | Update own items / all items |
 | `items.delete_own` / `items.delete_any` | Delete own items / all items |
+| `products.read` | Read active catalog reference data and published products |
+| `products.read_any` | Read active and inactive catalog data |
+| `products.create` / `products.update` / `products.delete` | Manage product catalog data |
 | `roles.read` | Read roles and the permission catalog |
 | `roles.create` / `roles.update` / `roles.delete` | Manage custom roles |
 | `roles.assign` | Assign a role to another user |
 | `utils.send_test_email` | Send a test email |
 | `utils.read_password_recovery_html` | Preview password recovery email HTML |
 
-The default `user` role can manage its own account and create/read/update/delete
-its own items. The `superuser` role receives the complete catalog.
+The default `user` role can manage its own account, create/read/update/delete
+its own items, and read active product catalog data. The `superuser` role
+receives the complete catalog.
 
 ## Endpoint authorization matrix
 
@@ -63,6 +67,10 @@ its own items. The `superuser` role receives the complete catalog.
 | `POST /items/` | `items.create`; owner is always set by the server |
 | `PUT /items/{id}` | `items.update_own` for own items or `items.update_any` for any item |
 | `DELETE /items/{id}` | `items.delete_own` for own items or `items.delete_any` for any item |
+| `GET /categories/`, `GET /brands/` and detail endpoints | `products.read` sees active records; `products.read_any` sees all records |
+| Create category/brand | `products.create` |
+| Update category/brand | `products.update` |
+| Delete category/brand | `products.delete`; records referenced by products cannot be deleted |
 | Role read/catalog endpoints | `roles.read` |
 | Role create/update/delete endpoints | Corresponding `roles.create`, `roles.update`, `roles.delete` |
 | `PUT /users/{user_id}/role` | `roles.assign`; cannot target the caller |
@@ -95,6 +103,10 @@ to `superuser` and all other existing users to `user`, then enforces a
 non-null indexed role foreign key. Startup seeding is idempotent. The bootstrap
 superuser configured in the environment is still created through the existing
 initial-data path.
+
+The TileVision catalog-permissions migration adds the `products.*` permission
+codes and grants `products.read` to the default `user` role. Startup seeding
+remains authoritative for the built-in role grants.
 
 The migration is transactional on PostgreSQL. Rollback removes the RBAC schema
 and `role_id` while retaining the legacy `is_superuser` column. Rolling back

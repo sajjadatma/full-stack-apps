@@ -401,6 +401,7 @@ class ProductPublic(ProductBase):
     created_at: datetime | None = None
     updated_at: datetime | None = None
     stock_state: str
+    images: list[ProductImagePublic] = Field(default_factory=list)
 
 
 class ProductsPublic(SQLModel):
@@ -411,6 +412,7 @@ class ProductsPublic(SQLModel):
 class ProductImageBase(SQLModel):
     product_id: uuid.UUID
     storage_key: str = Field(min_length=1, max_length=1024)
+    content_type: str = Field(min_length=1, max_length=64)
     url: str | None = Field(default=None, max_length=2048)
     alt_text: str | None = Field(default=None, max_length=255)
     sort_order: int = Field(default=0, ge=0)
@@ -431,6 +433,8 @@ class ProductImageUpdate(SQLModel):
 
 
 class ProductImage(ProductImageBase, table=True):
+    __tablename__ = "product_image"
+
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     created_at: datetime | None = Field(
         default_factory=get_datetime_utc,
@@ -450,6 +454,13 @@ class ProductImagePublic(ProductImageBase):
 class ProductImagesPublic(SQLModel):
     data: list[ProductImagePublic]
     count: int
+
+
+class ProductImageOrder(SQLModel):
+    image_ids: list[uuid.UUID]
+
+
+ProductPublic.model_rebuild()
 
 
 # Generic message

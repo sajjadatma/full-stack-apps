@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Iterator
 from dataclasses import dataclass
 from enum import StrEnum
 from functools import lru_cache
@@ -29,6 +30,8 @@ class StorageBackend(Protocol):
     def access_url(
         self, key: str, *, private: bool, expires_in: int | None = None
     ) -> str: ...
+
+    def stream(self, key: str) -> Iterator[bytes]: ...
 
 
 @dataclass(frozen=True)
@@ -110,10 +113,21 @@ class StorageService:
         self.backend.delete(key)
 
     def access_url(
-        self, key: str, *, private: bool = False, expires_in: int | None = None
+        self,
+        key: str,
+        *,
+        private: bool = False,
+        expires_in: int | None = None,
+        local_url: str | None = None,
     ) -> str:
         _safe_key(key)
+        if isinstance(self.backend, LocalStorageBackend) and local_url is not None:
+            return local_url
         return self.backend.access_url(key, private=private, expires_in=expires_in)
+
+    def stream(self, key: str) -> Iterator[bytes]:
+        _safe_key(key)
+        return self.backend.stream(key)
 
 
 class LocalStorageBackend:
@@ -146,6 +160,18 @@ class LocalStorageBackend:
         relative = _safe_key(key)
         encoded_key = quote(relative.as_posix(), safe="/")
         return f"{self.url_prefix}/{encoded_key}"
+
+    def stream(self, key: str) -> Iterator[bytes]:
+        path = self._path_for_key(key)
+        if not path.is_file():
+            raise FileNotFoundError(key)
+
+        def chunks() -> Iterator[bytes]:
+            with path.open("rb") as content_file:
+                while chunk := content_file.read(64 * 1024):
+                    yield chunk
+
+        return chunks()
 
 
 class S3StorageBackend:
@@ -192,6 +218,18 @@ class S3StorageBackend:
             Params={"Bucket": self.bucket, "Key": relative},
             ExpiresIn=ttl,
         )
+
+    def stream(self, key: str) -> Iterator[bytes]:
+        _safe_key(key)
+        body = self.client.get_object(Bucket=self.bucket, Key=key)["Body"]
+
+        def chunks() -> Iterator[bytes]:
+            try:
+                yield from body.iter_chunks(chunk_size=64 * 1024)
+            finally:
+                body.close()
+
+        return chunks()
 
 
 def create_storage_backend(settings: Settings) -> StorageBackend:

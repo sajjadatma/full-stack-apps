@@ -39,6 +39,7 @@ PRODUCTS_READ_ANY = "products.read_any"
 PRODUCTS_CREATE = "products.create"
 PRODUCTS_UPDATE = "products.update"
 PRODUCTS_DELETE = "products.delete"
+PRODUCTS_MANAGE_IMAGES = "products.manage_images"
 
 # Roles
 ROLES_READ = "roles.read"
@@ -81,6 +82,7 @@ PERMISSIONS: Final[tuple[PermissionInfo, ...]] = (
     PermissionInfo(PRODUCTS_CREATE, "Create product catalog data"),
     PermissionInfo(PRODUCTS_UPDATE, "Update product catalog data"),
     PermissionInfo(PRODUCTS_DELETE, "Delete product catalog data"),
+    PermissionInfo(PRODUCTS_MANAGE_IMAGES, "Manage product images"),
     PermissionInfo(ROLES_READ, "View roles and permissions"),
     PermissionInfo(ROLES_CREATE, "Create roles"),
     PermissionInfo(ROLES_UPDATE, "Update roles"),

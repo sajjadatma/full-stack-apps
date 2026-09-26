@@ -165,8 +165,16 @@ def test_product_supports_multiple_images(product_session: Session) -> None:
     category = Category(name="Wall", slug="wall")
     product = Product(name="Mosaic", sku="MOS-1", slug="mosaic-one", category=category)
     product.images = [
-        ProductImage(storage_key="products/mosaic/front.jpg", is_primary=True),
-        ProductImage(storage_key="products/mosaic/detail.jpg", sort_order=1),
+        ProductImage(
+            storage_key="products/mosaic/front.jpg",
+            content_type="image/jpeg",
+            is_primary=True,
+        ),
+        ProductImage(
+            storage_key="products/mosaic/detail.jpg",
+            content_type="image/jpeg",
+            sort_order=1,
+        ),
     ]
     product_session.add(product)
     product_session.commit()
@@ -183,7 +191,10 @@ def test_category_brand_and_image_schemas_have_create_update_public_and_list_sha
     category = CategoryPublic(id=uuid4(), name="Floor", slug="floor")
     brand = BrandPublic(id=uuid4(), name="Acme", slug="acme")
     image = ProductImagePublic(
-        id=uuid4(), product_id=uuid4(), storage_key="products/tile/image.jpg"
+        id=uuid4(),
+        product_id=uuid4(),
+        storage_key="products/tile/image.jpg",
+        content_type="image/jpeg",
     )
 
     assert CategoryCreate(name="Floor", slug="floor").name == "Floor"
@@ -194,7 +205,9 @@ def test_category_brand_and_image_schemas_have_create_update_public_and_list_sha
     assert BrandsPublic(data=[brand], count=1).data[0].id == brand.id
     assert (
         ProductImageCreate(
-            product_id=uuid4(), storage_key="products/tile/image.jpg"
+            product_id=uuid4(),
+            storage_key="products/tile/image.jpg",
+            content_type="image/jpeg",
         ).sort_order
         == 0
     )

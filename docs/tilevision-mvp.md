@@ -2,7 +2,7 @@
 
 - **Document ID:** TV-MVP-000
 - **Title:** TileVision MVP Product Domain (source of truth)
-- **Version:** 1.0
+- **Version:** 1.1
 - **Status:** Approved — authoritative for all TileVision tasks (T01+)
 - **Owner:** Product
 - **Date:** 2026-09-26
@@ -104,9 +104,10 @@ are the contract every other task codes against.
 |---|---|
 | **Product** | A sellable tile/ceramic item with one SKU, technical specifications, price, stock, and images. |
 | **SKU** | The staff-facing unique product code. |
-| **Surface** | Which part of the room the product is applied to: `FLOOR` or `WALL`. Exactly one per generation. |
-| **Room photo** | The customer's uploaded photograph of a real room. Private to the owner. |
-| **Generation** | One request to apply one product to one surface of one room photo, producing one result image. The unit of history. |
+| **Surface** | Which part of the room the product is applied to: `FLOOR` or `WALL`. Exactly one per generation job. |
+| **Room photo** | The customer's uploaded photograph of a real room. It is the source image stored on a `VisualizationProject` and is private to the owner. |
+| **VisualizationProject** | A user-owned workspace that stores the source room image and groups the generation jobs run against it. |
+| **GenerationJob** | One request to apply one product to one surface of one room photo, producing one result image. The unit of history. |
 | **Result image** | The AI-produced image: the original room with only the selected surface replaced. |
 | **Preservation** | The requirement that everything except the selected surface is unchanged from the original room photo. |
 | **Fail closed** | When the system cannot meet the preservation rules, it fails the generation with an explicit error instead of returning a degraded or misleading image. |
@@ -174,7 +175,7 @@ A product is one SKU of tile/ceramic.
   generations' history, but is no longer selectable.
 - Publishing a product requires at least one image and at least one suitable
   surface (see §4.2 and §5.2).
-- Deleting a product is restricted while generations reference it; staff
+- Deleting a product is restricted while generation jobs reference it; staff
   **archive** instead of delete for products with history. (The exact
   constraint is finalized by the implementing task; archiving is the
   recommended path.)
@@ -205,63 +206,71 @@ the catalog and the visualizer.
 - Uploads accept JPEG, PNG, and WebP only. SVG and animated formats are
   rejected. Size and dimension limits are defined in §9.
 
-### 4.3 Room photo
+### 4.3 VisualizationProject
 
-The customer's private upload.
+A user-owned workspace. It stores the source room image and groups the
+generation jobs run against that room.
 
 | Attribute | Type | Required | Notes |
 |---|---|---|---|
 | `id` | UUID | yes | Primary key. |
 | `owner_id` | UUID | yes | FK → user; cascade delete. |
-| `storage_key` | string | yes | Pointer to stored bytes. |
-| `url` | string | yes | Owner-only delivery URL. |
-| `content_type` | string(64) | yes | Validated MIME. |
-| `size_bytes` | integer | yes | Validated against the limit. |
-| `width_px` / `height_px` | integer | yes | Validated; orientation normalized. |
-| `created_at` | timestamp | yes | UTC. |
+| `name` | string(255) | no | Optional label for the project. |
+| `source_image_key` | string | yes | Pointer to the stored room photo bytes. |
+| `source_image_content_type` | string(64) | yes | Validated MIME. |
+| `source_image_size_bytes` | integer | yes | Validated against the limit. |
+| `source_image_width_px` / `source_image_height_px` | integer | yes | Validated; orientation normalized. |
+| `source_image_url` | string | no | Owner-only delivery URL. |
+| `created_at` / `updated_at` | timestamp | yes | UTC. |
 
 **Room photo rules**
 
+- The source room image belongs to its `VisualizationProject`; there is no
+  separate room photo entity.
 - Private to `owner_id`; never served publicly.
 - JPEG, PNG, WebP only. Size/dimension limits in §9.
 - Stored without relying on client-declared content type (server confirms).
-- Deleted when the owning account is deleted.
+- Deleted with its owning project, and the project is deleted when the owning
+  account is deleted.
+- A project may own many `GenerationJob`s; a user may own many projects.
 
-### 4.4 Generation
+### 4.4 GenerationJob
 
-One visualizer run. This is the unit of history.
+One visualizer run. This is the unit of history. It belongs to exactly one
+`VisualizationProject`.
 
 | Attribute | Type | Required | Notes |
 |---|---|---|---|
 | `id` | UUID | yes | Primary key. |
-| `owner_id` | UUID | yes | FK → user; cascade delete. |
-| `room_photo_id` | UUID | yes | FK → room photo. |
-| `product_id` | UUID | yes | FK → product (see deletion rule in §4.1). |
-| `product_snapshot` | JSON | yes | `sku`, `name`, and primary image URL at generation time, so history stays meaningful if the product later changes. |
-| `surface` | enum | yes | `FLOOR` or `WALL`. Exactly one. |
-| `status` | enum | yes | `queued`, `processing`, `succeeded`, `failed`. |
-| `result_image_key` / `result_image_url` | string | yes when succeeded | The result. |
-| `result_width_px` / `result_height_px` | integer | yes when succeeded | Must equal the room photo's dimensions. |
-| `provider` | string(64) | yes | Provider name. |
+| `project_id` | UUID | yes | FK → visualization project; cascade delete. |
+| `selected_product_id` | UUID | yes | FK → product (see deletion rule in §4.1). |
+| `target_surface` | enum | yes | `FLOOR` or `WALL`. Exactly one. |
+| `status` | enum | yes | `PENDING`, `PROCESSING`, `COMPLETED`, `FAILED`. |
+| `provider` | string(64) | no | Provider name. |
 | `provider_model` | string(120) | no | Model/version for audit. |
 | `provider_params` | JSON | no | Non-secret parameters used. |
-| `error_code` | enum | yes when failed | See §5.5. |
+| `prompt_version` | string(64) | no | Prompt revision used for reproducibility. |
+| `output_image_key` / `output_image_url` | string | yes when completed | The result. |
+| `output_image_content_type` | string(64) | no | Validated MIME of the result. |
+| `output_image_width_px` / `output_image_height_px` | integer | yes when completed | Must equal the room photo's dimensions. |
+| `error_code` | string(64) | yes when failed | See §5.5. |
 | `error_message` | string(500) | no | Safe, non-PII message. |
-| `created_at` | timestamp | yes | UTC; when requested. |
+| `retry_count` | integer | yes | Defaults to `0`. |
+| `created_at` / `updated_at` | timestamp | yes | UTC; `created_at` is when requested. |
 | `started_at` / `completed_at` | timestamp | no | Lifecycle timestamps. |
-| `duration_ms` | integer | no | Processing time. |
 
-**Generation rules**
+**GenerationJob rules**
 
-- A generation is immutable except for its lifecycle fields
-  (`status`, result fields, timestamps, error fields). It is never edited back
+- A generation job is immutable except for its lifecycle fields
+  (`status`, output fields, timestamps, error fields). It is never edited back
   to an earlier status.
-- One generation produces exactly one result image and corresponds to exactly
-  one surface.
-- A failed generation can be retried only by creating a **new** generation;
-  failures never mutate into success.
-- History is owner-scoped; `generations.read_any` allows staff/administrators
-  to view for support, never to modify.
+- One generation job produces exactly one result image and corresponds to
+  exactly one target surface.
+- A failed generation job can be retried only by creating a **new** generation
+  job; failures never mutate into success.
+- History is owner-scoped through the owning project's `owner_id`;
+  `generations.read_any` allows staff/administrators to view for support, never
+  to modify.
 
 ---
 
@@ -281,15 +290,16 @@ One visualizer run. This is the unit of history.
    The UI only offers products whose `suitable_surfaces` includes the chosen
    surface and that have at least one image. A product unsuitable for the
    chosen surface is not selectable and, if forced via the API, is rejected.
-5. **Generate.** The user submits. The backend creates a `Generation` in
-   `queued` and begins processing. The UI shows progress on that generation.
-6. **View the result.** On success the UI shows the result image, with a
-   before/after comparison against the original room photo, and offers
-   download. On failure the UI shows the failure reason and offers retry
-   (a new generation).
-7. **Revisit history.** The user opens the generations list, sees their past
-   generations (thumbnail, product, surface, status, date), opens any past
-   result, and may delete their own generations.
+5. **Generate.** The user submits. The backend creates a `GenerationJob` in
+   `PENDING` and begins processing. The UI shows progress on that generation
+   job.
+6. **View the result.** On success (`COMPLETED`) the UI shows the result image,
+   with a before/after comparison against the original room photo, and offers
+   download. On failure (`FAILED`) the UI shows the failure reason and offers
+   retry (a new generation job).
+7. **Revisit history.** The user opens the generation history, sees their past
+   generation jobs (thumbnail, product, target surface, status, date), opens
+   any past result, and may delete their own generation jobs.
 
 Entry-point state (product preselected, surface preselected) may be carried
 from the catalog, but each generation stores its own final `surface` and
@@ -306,26 +316,26 @@ from the catalog, but each generation stores its own final `surface` and
 | Product | Must exist, be `published` at submit time, have at least one image, and `suitable_surfaces` must include the chosen surface. |
 | Authorization | Authenticated user with `generations.create`. |
 
-Validation failures return a clear error and never create a `succeeded`
-generation.
+Validation failures return a clear error and never create a `COMPLETED`
+generation job.
 
 ### 5.3 Generation lifecycle
 
 ```
-queued ──► processing ──► succeeded
-                  └─────► failed
+PENDING ──► PROCESSING ──► COMPLETED
+                  └──────► FAILED
 ```
 
-- **queued**: record created; not yet sent to the provider.
-- **processing**: provider call in flight (the only long-running state).
-- **succeeded**: a result image exists and passed the preservation checks
+- **PENDING**: record created; not yet sent to the provider.
+- **PROCESSING**: provider call in flight (the only long-running state).
+- **COMPLETED**: a result image exists and passed the preservation checks
   (§6).
-- **failed**: no usable result; `error_code` explains why.
+- **FAILED**: no usable result; `error_code` explains why.
 
-Transitions are one-way. A generation in `succeeded` or `failed` is terminal.
-Processing is asynchronous from the user's perspective: the UI observes
-progress (polling the generation resource is acceptable for MVP) and the user
-may leave and return later.
+Transitions are one-way. A `GenerationJob` in `COMPLETED` or `FAILED` is
+terminal. Processing is asynchronous from the user's perspective: the UI
+observes progress (polling the generation job resource is acceptable for MVP)
+and the user may leave and return later.
 
 ### 5.4 Result presentation
 
@@ -338,7 +348,7 @@ may leave and return later.
 
 ### 5.5 Failure handling
 
-Failed generations store a stable `error_code`. MVP codes:
+Failed generation jobs store a stable `error_code`. MVP codes:
 
 | `error_code` | Meaning |
 |---|---|
@@ -403,9 +413,9 @@ the backend checks, and QA.
 ### 6.3 Fail-closed rule
 
 10. If the provider cannot identify the requested surface, cannot preserve the
-    room, or the result fails the checks in §6.4, the generation **must fail**
-    with the appropriate `error_code`. Returning a degraded, altered, or
-    unchanged image as `succeeded` is prohibited.
+    room, or the result fails the checks in §6.4, the generation job **must
+    fail** with the appropriate `error_code`. Returning a degraded, altered, or
+    unchanged image as `COMPLETED` is prohibited.
 11. A result that is effectively identical to the original is a failure
     (`no_change_detected`), not a success.
 12. The original room photo is never modified or overwritten; the result is a
@@ -419,8 +429,8 @@ the backend checks, and QA.
     configured tolerance;
   - inside the region, the difference must exceed a configured minimum (i.e.,
     something was actually applied).
-  A generation that violates either bound fails with `preservation_failed` (or
-  `no_change_detected`).
+  A generation job that violates either bound fails with
+  `preservation_failed` (or `no_change_detected`).
 - **Golden-example QA (required).** Human side-by-side review of the success,
   edge, and failure examples in §5 and §4 confirms the rules above. Exact
   tolerances and the mask source (provider-supplied vs computed locally) are
@@ -446,8 +456,8 @@ so a result can be explained and reproduced where the provider allows it.
 - **Visualizer:** surface selection (`FLOOR`/`WALL`), product selection with
   suitability filtering, generation, progress, result display, before/after
   comparison, and download.
-- **History:** owner-scoped list and detail of past generations; delete own
-  generations; staff read-any for support.
+- **History:** owner-scoped list and detail of past generation jobs; delete own
+  generation jobs; staff read-any for support.
 - **Preservation:** the §6 rules enforced with fail-closed behavior.
 - **Authorization:** the roles and permission codes in §2.2, enforced by the
   backend.
@@ -584,8 +594,8 @@ Numbered and independently verifiable.
 - **AC-5 — Preservation.** On the golden examples, only the selected surface
   changes; §6.2 holds; a result that cannot meet the rules fails closed rather
   than shipping a degraded image.
-- **AC-6 — History.** A customer can list their generations, reopen a past
-  result (before/after), and delete their own generations; another customer
+- **AC-6 — History.** A customer can list their generation jobs, reopen a past
+  result (before/after), and delete their own generation jobs; another customer
   cannot see them.
 - **AC-7 — Authorization.** Permission codes in §2.2 are enforced by the
   backend; unauthorized requests receive 403 and cross-user access is denied.
@@ -632,6 +642,12 @@ implements the relevant area.
 
 ## 12. Change history
 
+- v1.1 (2026-09-27): Reconciled the visualizer domain with the T11 data model.
+  The canonical entities are `VisualizationProject` (owner-scoped, stores the
+  source room image) and `GenerationJob` (belongs to a project). Generation
+  statuses are `PENDING`, `PROCESSING`, `COMPLETED`, `FAILED`; target surfaces
+  are `FLOOR` and `WALL`. The separate `RoomPhoto` and `Generation` entities are
+  superseded; there is no `queued`/`succeeded` status.
 - v1.0 (2026-09-26): Initial TileVision MVP product domain document (T00).
   Defines purpose, roles, glossary, entities, visualizer workflow,
   preservation rules, MVP scope and non-goals, architecture fit,

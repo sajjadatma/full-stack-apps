@@ -1,10 +1,11 @@
 import uuid
 from datetime import UTC, datetime
 from decimal import Decimal
-from typing import Annotated
+from enum import StrEnum
+from typing import Annotated, Any
 
-from pydantic import EmailStr, StringConstraints
-from sqlalchemy import DateTime, Numeric
+from pydantic import EmailStr, StringConstraints, field_validator
+from sqlalchemy import JSON, DateTime, Index, Numeric
 from sqlmodel import Field, Relationship, SQLModel
 
 
@@ -161,6 +162,9 @@ class User(UserBase, table=True):
     )
     role: Role | None = Relationship(back_populates="users")
     items: list[Item] = Relationship(back_populates="owner", cascade_delete=True)
+    visualization_projects: list[VisualizationProject] = Relationship(
+        back_populates="owner", cascade_delete=True
+    )
 
 
 # Properties to return via API, id is always required
@@ -461,6 +465,192 @@ class ProductImageOrder(SQLModel):
 
 
 ProductPublic.model_rebuild()
+
+
+# ---------------------------------------------------------------------------
+# TileVision room visualizer (projects and generation jobs)
+# ---------------------------------------------------------------------------
+
+
+class TargetSurface(StrEnum):
+    FLOOR = "FLOOR"
+    WALL = "WALL"
+
+
+class GenerationStatus(StrEnum):
+    PENDING = "PENDING"
+    PROCESSING = "PROCESSING"
+    COMPLETED = "COMPLETED"
+    FAILED = "FAILED"
+
+
+def _enum_value(value: object, choices: type[StrEnum], field_name: str) -> str:
+    if isinstance(value, choices):
+        return value.value
+    try:
+        return choices(str(value)).value
+    except ValueError as exc:
+        allowed = ", ".join(choice.value for choice in choices)
+        raise ValueError(f"{field_name} must be one of: {allowed}") from exc
+
+
+class VisualizationProjectBase(SQLModel):
+    name: str | None = Field(default=None, max_length=255)
+    source_image_key: str = Field(min_length=1, max_length=1024)
+    source_image_content_type: str = Field(min_length=1, max_length=64)
+    source_image_size_bytes: int = Field(gt=0)
+    source_image_width_px: int = Field(gt=0)
+    source_image_height_px: int = Field(gt=0)
+    source_image_url: str | None = Field(default=None, max_length=2048)
+
+
+class VisualizationProjectCreate(VisualizationProjectBase):
+    pass
+
+
+class VisualizationProject(VisualizationProjectBase, table=True):
+    __tablename__ = "visualization_project"
+    __table_args__ = (
+        Index("ix_visualization_project_owner_created", "owner_id", "created_at"),
+    )
+
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    created_at: datetime | None = Field(
+        default_factory=get_datetime_utc,
+        sa_type=DateTime(timezone=True),  # type: ignore
+    )
+    updated_at: datetime | None = Field(
+        default_factory=get_datetime_utc,
+        sa_type=DateTime(timezone=True),  # type: ignore
+    )
+    owner_id: uuid.UUID = Field(
+        foreign_key="user.id", nullable=False, ondelete="CASCADE"
+    )
+    owner: User | None = Relationship(back_populates="visualization_projects")
+    jobs: list[GenerationJob] = Relationship(
+        back_populates="project", cascade_delete=True
+    )
+
+
+class VisualizationProjectPublic(VisualizationProjectBase):
+    id: uuid.UUID
+    owner_id: uuid.UUID
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
+
+
+class VisualizationProjectsPublic(SQLModel):
+    data: list[VisualizationProjectPublic]
+    count: int
+
+
+class GenerationJobBase(SQLModel):
+    target_surface: str = Field(max_length=16)
+    status: str = Field(default=GenerationStatus.PENDING.value, max_length=16)
+    provider: str | None = Field(default=None, max_length=64)
+    provider_model: str | None = Field(default=None, max_length=120)
+    provider_params: dict[str, Any] | None = Field(default=None, sa_type=JSON)
+    prompt_version: str | None = Field(default=None, max_length=64)
+    output_image_key: str | None = Field(default=None, max_length=1024)
+    output_image_url: str | None = Field(default=None, max_length=2048)
+    output_image_content_type: str | None = Field(default=None, max_length=64)
+    output_image_width_px: int | None = Field(default=None, gt=0)
+    output_image_height_px: int | None = Field(default=None, gt=0)
+    error_code: str | None = Field(default=None, max_length=64)
+    error_message: str | None = Field(default=None, max_length=500)
+    retry_count: int = Field(default=0, ge=0)
+
+    @field_validator("target_surface", mode="before")
+    @classmethod
+    def _validate_target_surface(cls, value: object) -> str:
+        return _enum_value(value, TargetSurface, "target_surface")
+
+    @field_validator("status", mode="before")
+    @classmethod
+    def _validate_status(cls, value: object) -> str:
+        return _enum_value(value, GenerationStatus, "status")
+
+
+class GenerationJobCreate(SQLModel):
+    project_id: uuid.UUID
+    selected_product_id: uuid.UUID
+    target_surface: TargetSurface
+    provider: str | None = Field(default=None, max_length=64)
+    provider_model: str | None = Field(default=None, max_length=120)
+    prompt_version: str | None = Field(default=None, max_length=64)
+
+
+class GenerationJobUpdate(SQLModel):
+    status: GenerationStatus | None = None
+    provider: str | None = Field(default=None, max_length=64)
+    provider_model: str | None = Field(default=None, max_length=120)
+    provider_params: dict[str, Any] | None = None
+    prompt_version: str | None = Field(default=None, max_length=64)
+    output_image_key: str | None = Field(default=None, max_length=1024)
+    output_image_url: str | None = Field(default=None, max_length=2048)
+    output_image_content_type: str | None = Field(default=None, max_length=64)
+    output_image_width_px: int | None = Field(default=None, gt=0)
+    output_image_height_px: int | None = Field(default=None, gt=0)
+    error_code: str | None = Field(default=None, max_length=64)
+    error_message: str | None = Field(default=None, max_length=500)
+    retry_count: int | None = Field(default=None, ge=0)
+    started_at: datetime | None = None
+    completed_at: datetime | None = None
+
+
+class GenerationJob(GenerationJobBase, table=True):
+    __tablename__ = "generation_job"
+    __table_args__ = (
+        Index("ix_generation_job_project_created", "project_id", "created_at"),
+        Index("ix_generation_job_status_created", "status", "created_at"),
+    )
+
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    created_at: datetime | None = Field(
+        default_factory=get_datetime_utc,
+        sa_type=DateTime(timezone=True),  # type: ignore
+    )
+    updated_at: datetime | None = Field(
+        default_factory=get_datetime_utc,
+        sa_type=DateTime(timezone=True),  # type: ignore
+    )
+    started_at: datetime | None = Field(
+        default=None,
+        sa_type=DateTime(timezone=True),  # type: ignore
+    )
+    completed_at: datetime | None = Field(
+        default=None,
+        sa_type=DateTime(timezone=True),  # type: ignore
+    )
+    project_id: uuid.UUID = Field(
+        foreign_key="visualization_project.id", nullable=False, ondelete="CASCADE"
+    )
+    selected_product_id: uuid.UUID = Field(
+        foreign_key="product.id",
+        nullable=False,
+        index=True,
+        ondelete="RESTRICT",
+    )
+    project: VisualizationProject | None = Relationship(back_populates="jobs")
+    selected_product: Product | None = Relationship()
+
+
+class GenerationJobPublic(GenerationJobBase):
+    id: uuid.UUID
+    project_id: uuid.UUID
+    selected_product_id: uuid.UUID
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
+    started_at: datetime | None = None
+    completed_at: datetime | None = None
+
+
+class GenerationJobsPublic(SQLModel):
+    data: list[GenerationJobPublic]
+    count: int
+
+
+GenerationJob.model_rebuild()
 
 
 # Generic message

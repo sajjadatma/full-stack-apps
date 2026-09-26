@@ -1,11 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useNavigate } from "@tanstack/react-router"
-import { useEffect } from "react"
+import { useCallback, useEffect } from "react"
 
 import {
   type Body_login_login_access_token as AccessToken,
   LoginService,
-  type UserPublic,
+  type UserMePublic,
   type UserRegister,
   UsersService,
 } from "@/client"
@@ -22,7 +22,7 @@ const useAuth = () => {
   const queryClient = useQueryClient()
   const { showErrorToast } = useCustomToast()
 
-  const { data: user } = useQuery<UserPublic | null, Error>({
+  const { data: user } = useQuery<UserMePublic | null, Error>({
     queryKey: ["currentUser"],
     queryFn: async () => (await UsersService.readUserMe()).data,
     enabled: isLoggedIn(),
@@ -36,6 +36,13 @@ const useAuth = () => {
       void i18n.changeLanguage(userLocale)
     }
   }, [user?.locale])
+
+  const permissions = user?.permissions ?? []
+
+  const hasPermission = useCallback(
+    (permission: string) => permissions.includes(permission),
+    [permissions],
+  )
 
   const signUpMutation = useMutation({
     mutationFn: (data: UserRegister) =>
@@ -61,6 +68,7 @@ const useAuth = () => {
   const loginMutation = useMutation({
     mutationFn: login,
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["currentUser"] })
       navigate({ to: "/" })
     },
     onError: handleError.bind(showErrorToast),
@@ -68,6 +76,8 @@ const useAuth = () => {
 
   const logout = () => {
     localStorage.removeItem("access_token")
+    // Drop every cached query so a different account starts from a clean slate.
+    queryClient.clear()
     navigate({ to: "/login" })
   }
 
@@ -76,6 +86,8 @@ const useAuth = () => {
     loginMutation,
     logout,
     user,
+    permissions,
+    hasPermission,
   }
 }
 

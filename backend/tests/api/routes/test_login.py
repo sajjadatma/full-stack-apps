@@ -9,7 +9,7 @@ from app.core.security import get_password_hash, verify_password
 from app.crud import create_user
 from app.models import User, UserCreate
 from app.utils import generate_password_reset_token
-from tests.utils.user import user_authentication_headers
+from tests.utils.user import get_default_role, user_authentication_headers
 from tests.utils.utils import random_email, random_lower_string
 
 
@@ -44,6 +44,15 @@ def test_use_access_token(
     result = r.json()
     assert r.status_code == 200
     assert "email" in result
+
+
+def test_invalid_access_token_returns_unauthorized(client: TestClient) -> None:
+    response = client.post(
+        f"{settings.API_V1_STR}/login/test-token",
+        headers={"Authorization": "Bearer invalid-token"},
+    )
+    assert response.status_code == 401
+    assert response.headers["www-authenticate"] == "Bearer"
 
 
 def test_recovery_password(
@@ -138,7 +147,12 @@ def test_login_with_bcrypt_password_upgrades_to_argon2(
     bcrypt_hash = bcrypt_hasher.hash(password)
     assert bcrypt_hash.startswith("$2")  # bcrypt hashes start with $2
 
-    user = User(email=email, hashed_password=bcrypt_hash, is_active=True)
+    user = User(
+        email=email,
+        hashed_password=bcrypt_hash,
+        is_active=True,
+        role_id=get_default_role(db=db).id,
+    )
     db.add(user)
     db.commit()
     db.refresh(user)
@@ -172,7 +186,12 @@ def test_login_with_argon2_password_keeps_hash(client: TestClient, db: Session) 
     assert argon2_hash.startswith("$argon2")
 
     # Create user with argon2 hash
-    user = User(email=email, hashed_password=argon2_hash, is_active=True)
+    user = User(
+        email=email,
+        hashed_password=argon2_hash,
+        is_active=True,
+        role_id=get_default_role(db=db).id,
+    )
     db.add(user)
     db.commit()
     db.refresh(user)

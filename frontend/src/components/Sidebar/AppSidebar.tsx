@@ -1,4 +1,4 @@
-import { Briefcase, Home, Users } from "lucide-react"
+import { Briefcase, Home, ShieldCheck, Users } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
 import { SidebarAppearance } from "@/components/Common/Appearance"
@@ -16,7 +16,7 @@ import { type Item, Main } from "./Main"
 import { User } from "./User"
 
 export function AppSidebar() {
-  const { user: currentUser } = useAuth()
+  const { user: currentUser, hasPermission } = useAuth()
   const { t } = useTranslation()
   const { direction } = useLanguage()
 
@@ -25,12 +25,17 @@ export function AppSidebar() {
     { icon: Briefcase, title: t("navigation.items"), path: "/items" },
   ]
 
-  const items = currentUser?.is_superuser
-    ? [
-        ...baseItems,
-        { icon: Users, title: t("navigation.admin"), path: "/admin" },
-      ]
-    : baseItems
+  const items = [...baseItems]
+  if (hasPermission("users.read")) {
+    items.push({ icon: Users, title: t("navigation.admin"), path: "/admin" })
+  }
+  if (hasPermission("roles.read")) {
+    items.push({
+      icon: ShieldCheck,
+      title: t("navigation.roles"),
+      path: "/roles",
+    })
+  }
 
   return (
     <Sidebar collapsible="icon" side={direction === "rtl" ? "right" : "left"}>

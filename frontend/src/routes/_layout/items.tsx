@@ -1,14 +1,15 @@
 import { useSuspenseQuery } from "@tanstack/react-query"
-import { createFileRoute } from "@tanstack/react-router"
+import { createFileRoute, redirect } from "@tanstack/react-router"
 import { Search } from "lucide-react"
 import { Suspense } from "react"
 import { useTranslation } from "react-i18next"
 
-import { ItemsService } from "@/client"
+import { ItemsService, UsersService } from "@/client"
 import { DataTable } from "@/components/Common/DataTable"
 import AddItem from "@/components/Items/AddItem"
 import { useItemColumns } from "@/components/Items/columns"
 import PendingItems from "@/components/Pending/PendingItems"
+import useAuth from "@/hooks/useAuth"
 import i18n from "@/i18n"
 
 function getItemsQueryOptions() {
@@ -21,6 +22,15 @@ function getItemsQueryOptions() {
 
 export const Route = createFileRoute("/_layout/items")({
   component: Items,
+  beforeLoad: async () => {
+    const { data: user } = await UsersService.readUserMe()
+    const canReadItems =
+      user.permissions?.includes("items.read_any") ||
+      user.permissions?.includes("items.read_own")
+    if (!canReadItems) {
+      throw redirect({ to: "/" })
+    }
+  },
   head: () => ({
     meta: [
       {
@@ -60,6 +70,7 @@ function ItemsTable() {
 
 function Items() {
   const { t } = useTranslation()
+  const { hasPermission } = useAuth()
 
   return (
     <div className="flex flex-col gap-6">
@@ -70,7 +81,7 @@ function Items() {
           </h1>
           <p className="text-muted-foreground">{t("items.subtitle")}</p>
         </div>
-        <AddItem />
+        {hasPermission("items.create") && <AddItem />}
       </div>
       <ItemsTable />
     </div>

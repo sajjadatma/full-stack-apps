@@ -4,8 +4,17 @@ from typing import Any
 from fastapi import APIRouter, HTTPException
 from sqlmodel import col, func, select
 
-from app.api.deps import CurrentUser, SessionDep
+from app.api.deps import CurrentUser, SessionDep, ensure_permissions
 from app.core.i18n import t
+from app.core.rbac import (
+    ITEMS_CREATE,
+    ITEMS_READ_ANY,
+    ITEMS_READ_OWN,
+    can_delete_item,
+    can_read_item,
+    can_read_items_any,
+    can_update_item,
+)
 from app.models import Item, ItemCreate, ItemPublic, ItemsPublic, ItemUpdate, Message
 
 router = APIRouter(prefix="/items", tags=["items"])
@@ -16,10 +25,11 @@ def read_items(
     session: SessionDep, current_user: CurrentUser, skip: int = 0, limit: int = 100
 ) -> Any:
     """
-    Retrieve items.
+    Retrieve items the current user is allowed to read.
     """
+    ensure_permissions(current_user, ITEMS_READ_OWN, ITEMS_READ_ANY, require_all=False)
 
-    if current_user.is_superuser:
+    if can_read_items_any(current_user):
         count_statement = select(func.count()).select_from(Item)
         count = session.exec(count_statement).one()
         statement = (
@@ -54,7 +64,7 @@ def read_item(session: SessionDep, current_user: CurrentUser, id: uuid.UUID) -> 
     item = session.get(Item, id)
     if not item:
         raise HTTPException(status_code=404, detail=t("item_not_found"))
-    if not current_user.is_superuser and (item.owner_id != current_user.id):
+    if not can_read_item(current_user, item):
         raise HTTPException(status_code=403, detail=t("not_enough_permissions"))
     return item
 
@@ -66,6 +76,7 @@ def create_item(
     """
     Create new item.
     """
+    ensure_permissions(current_user, ITEMS_CREATE)
     item = Item.model_validate(item_in, update={"owner_id": current_user.id})
     session.add(item)
     session.commit()
@@ -87,7 +98,7 @@ def update_item(
     item = session.get(Item, id)
     if not item:
         raise HTTPException(status_code=404, detail=t("item_not_found"))
-    if not current_user.is_superuser and (item.owner_id != current_user.id):
+    if not can_update_item(current_user, item):
         raise HTTPException(status_code=403, detail=t("not_enough_permissions"))
     update_dict = item_in.model_dump(exclude_unset=True)
     item.sqlmodel_update(update_dict)
@@ -107,7 +118,7 @@ def delete_item(
     item = session.get(Item, id)
     if not item:
         raise HTTPException(status_code=404, detail=t("item_not_found"))
-    if not current_user.is_superuser and (item.owner_id != current_user.id):
+    if not can_delete_item(current_user, item):
         raise HTTPException(status_code=403, detail=t("not_enough_permissions"))
     session.delete(item)
     session.commit()

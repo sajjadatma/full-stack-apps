@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next"
 
 import type { UserPublic } from "@/client"
 import { Badge } from "@/components/ui/badge"
+import { Checkbox } from "@/components/ui/checkbox"
 import { cn } from "@/lib/utils"
 import { UserActionsMenu } from "./UserActionsMenu"
 
@@ -11,11 +12,48 @@ export type UserTableData = UserPublic & {
   isCurrentUser: boolean
 }
 
-export function useUserColumns(): ColumnDef<UserTableData>[] {
+interface UseUserColumnsOptions {
+  withSelection?: boolean
+}
+
+export function useUserColumns({
+  withSelection = false,
+}: UseUserColumnsOptions = {}): ColumnDef<UserTableData>[] {
   const { t } = useTranslation()
 
-  return useMemo(
-    () => [
+  return useMemo(() => {
+    const selectionColumn: ColumnDef<UserTableData> = {
+      id: "select",
+      header: ({ table }) => (
+        <Checkbox
+          data-testid="select-all-users"
+          checked={
+            table.getIsAllPageRowsSelected()
+              ? true
+              : table.getIsSomePageRowsSelected()
+                ? "indeterminate"
+                : false
+          }
+          onCheckedChange={(value) =>
+            table.toggleAllPageRowsSelected(value === true)
+          }
+          aria-label={t("admin.selectAll")}
+        />
+      ),
+      cell: ({ row }) => (
+        <Checkbox
+          data-testid={`select-user-${row.original.id}`}
+          checked={row.getIsSelected()}
+          disabled={!row.getCanSelect()}
+          onCheckedChange={(value) => row.toggleSelected(value === true)}
+          aria-label={t("admin.selectRow")}
+        />
+      ),
+      enableSorting: false,
+      enableHiding: false,
+    }
+
+    const columns: ColumnDef<UserTableData>[] = [
       {
         accessorKey: "full_name",
         header: t("common.fullName"),
@@ -48,13 +86,18 @@ export function useUserColumns(): ColumnDef<UserTableData>[] {
         ),
       },
       {
-        accessorKey: "is_superuser",
+        accessorKey: "role",
         header: t("admin.role"),
-        cell: ({ row }) => (
-          <Badge variant={row.original.is_superuser ? "default" : "secondary"}>
-            {row.original.is_superuser ? t("admin.superuser") : t("admin.user")}
-          </Badge>
-        ),
+        cell: ({ row }) => {
+          const role = row.original.role
+          return (
+            <Badge variant={role?.is_system ? "default" : "secondary"}>
+              {role
+                ? t(`systemRoles.${role.slug}`, { defaultValue: role.name })
+                : t("common.na")}
+            </Badge>
+          )
+        },
       },
       {
         accessorKey: "is_active",
@@ -84,7 +127,8 @@ export function useUserColumns(): ColumnDef<UserTableData>[] {
           </div>
         ),
       },
-    ],
-    [t],
-  )
+    ]
+
+    return withSelection ? [selectionColumn, ...columns] : columns
+  }, [t, withSelection])
 }

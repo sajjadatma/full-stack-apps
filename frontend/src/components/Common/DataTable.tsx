@@ -3,6 +3,8 @@ import {
   flexRender,
   getCoreRowModel,
   getPaginationRowModel,
+  type OnChangeFn,
+  type RowSelectionState,
   useReactTable,
 } from "@tanstack/react-table"
 import {
@@ -11,6 +13,7 @@ import {
   ChevronsLeft,
   ChevronsRight,
 } from "lucide-react"
+import { useState } from "react"
 import { useTranslation } from "react-i18next"
 
 import { Button } from "@/components/ui/button"
@@ -34,14 +37,32 @@ import { useLanguage } from "@/i18n/useLanguage"
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
   data: TData[]
+  /** Enables TanStack row selection; add a selection column to use it. */
+  enableRowSelection?: boolean
+  /** Per-row guard so some rows cannot be selected. */
+  isRowSelectable?: (row: TData) => boolean
+  /** Stable row id. Required when using selection. */
+  getRowId?: (row: TData) => string
+  /** Controlled selection state. */
+  rowSelection?: RowSelectionState
+  onRowSelectionChange?: OnChangeFn<RowSelectionState>
 }
 
 export function DataTable<TData, TValue>({
   columns,
   data,
+  enableRowSelection,
+  isRowSelectable,
+  getRowId,
+  rowSelection,
+  onRowSelectionChange,
 }: DataTableProps<TData, TValue>) {
   const { t } = useTranslation()
   const { language } = useLanguage()
+  const [internalRowSelection, setInternalRowSelection] =
+    useState<RowSelectionState>({})
+  const selectionState = rowSelection ?? internalRowSelection
+  const selectionChange = onRowSelectionChange ?? setInternalRowSelection
   const formatNumber = (value: number) =>
     new Intl.NumberFormat(language).format(value)
   const table = useReactTable({
@@ -49,6 +70,12 @@ export function DataTable<TData, TValue>({
     columns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
+    enableRowSelection: isRowSelectable
+      ? (row) => isRowSelectable(row.original)
+      : enableRowSelection,
+    getRowId: getRowId ? (row) => getRowId(row) : undefined,
+    state: { rowSelection: selectionState },
+    onRowSelectionChange: selectionChange,
   })
 
   const { pageIndex, pageSize } = table.getState().pagination

@@ -3,8 +3,16 @@ from sqlmodel import Session
 
 from app import crud
 from app.core.config import settings
-from app.models import User, UserCreate, UserUpdate
+from app.core.rbac import USER_ROLE_SLUG
+from app.models import Role, User, UserCreate, UserUpdate
 from tests.utils.utils import random_email, random_lower_string
+
+
+def get_default_role(*, db: Session) -> Role:
+    """Return the built-in default ``user`` role."""
+    role = crud.get_role_by_slug(session=db, slug=USER_ROLE_SLUG)
+    assert role is not None
+    return role
 
 
 def user_authentication_headers(

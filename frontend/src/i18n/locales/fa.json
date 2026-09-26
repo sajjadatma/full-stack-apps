@@ -49,6 +49,7 @@
     "dashboard": "داشبورد",
     "items": "آیتم‌ها",
     "admin": "مدیریت",
+    "roles": "نقش‌ها",
     "userSettings": "تنظیمات کاربر",
     "logOut": "خروج",
     "toggleSidebar": "جابه‌جایی نوار کناری",
@@ -114,6 +115,16 @@
     "deletedSuccess": "کاربر با موفقیت حذف شد",
     "isSuperuser": "کاربر ارشد؟",
     "isActive": "فعال؟",
+    "selectRole": "یک نقش انتخاب کنید",
+    "passwordOptionalHint": "برای حفظ رمز عبور فعلی، این فیلد را خالی بگذارید",
+    "selectAll": "انتخاب همه",
+    "selectRow": "انتخاب سطر",
+    "selectedCount": "{{count}} مورد انتخاب شد",
+    "deleteSelected": "حذف موارد انتخاب‌شده",
+    "deleteSelectedDescription": "شما در حال <strong>حذف دائمی</strong> {{count}} کاربر و تمام آیتم‌های آن‌ها هستید. این عمل قابل بازگشت نیست.",
+    "clearSelection": "پاک کردن انتخاب",
+    "bulkDeletedSuccess": "{{count}} کاربر با موفقیت حذف شد",
+    "bulkDeletePartial": "{{deleted}} حذف شد، {{failed}} ناموفق",
     "you": "شما",
     "role": "نقش",
     "superuser": "کاربر ارشد",
@@ -121,6 +132,67 @@
     "status": "وضعیت",
     "active": "فعال",
     "inactive": "غیرفعال"
+  },
+  "roles": {
+    "title": "نقش‌ها و دسترسی‌ها",
+    "subtitle": "مدیریت نقش‌ها و دسترسی‌هایی که اعطا می‌کنند",
+    "addRole": "افزودن نقش",
+    "editRole": "ویرایش نقش",
+    "deleteRole": "حذف نقش",
+    "addRoleDescription": "یک نقش سفارشی بسازید و دسترسی‌های آن را انتخاب کنید.",
+    "editRoleDescription": "جزئیات نقش و دسترسی‌های آن را به‌روزرسانی کنید.",
+    "deleteRoleDescription": "نقش «<strong>{{name}}</strong>» برای همیشه حذف خواهد شد. آیا مطمئن هستید؟",
+    "name": "نام",
+    "slug": "شناسه",
+    "description": "توضیحات",
+    "permissions": "دسترسی‌ها",
+    "permissionsCount": "{{count}} دسترسی",
+    "systemRole": "سیستمی",
+    "systemRoleReadOnly": "فقط خواندنی",
+    "createdSuccess": "نقش با موفقیت ایجاد شد",
+    "updatedSuccess": "نقش با موفقیت به‌روزرسانی شد",
+    "deletedSuccess": "نقش با موفقیت حذف شد"
+  },
+  "systemRoles": {
+    "user": "کاربر",
+    "superuser": "کاربر ارشد"
+  },
+  "permissionGroups": {
+    "users": "کاربران",
+    "items": "آیتم‌ها",
+    "roles": "نقش‌ها",
+    "utils": "ابزارها"
+  },
+  "permissions": {
+    "users": {
+      "read": "خواندن حساب هر کاربر",
+      "create": "ایجاد حساب کاربری",
+      "update": "به‌روزرسانی حساب هر کاربر",
+      "delete": "حذف حساب هر کاربر",
+      "read_self": "خواندن حساب خود",
+      "update_self": "به‌روزرسانی حساب خود",
+      "delete_self": "حذف حساب خود"
+    },
+    "items": {
+      "read_own": "خواندن آیتم‌های خود",
+      "read_any": "خواندن همه آیتم‌ها",
+      "create": "ایجاد آیتم",
+      "update_own": "به‌روزرسانی آیتم‌های خود",
+      "update_any": "به‌روزرسانی همه آیتم‌ها",
+      "delete_own": "حذف آیتم‌های خود",
+      "delete_any": "حذف همه آیتم‌ها"
+    },
+    "roles": {
+      "read": "مشاهده نقش‌ها و دسترسی‌ها",
+      "create": "ایجاد نقش",
+      "update": "به‌روزرسانی نقش",
+      "delete": "حذف نقش",
+      "assign": "اختصاص نقش به کاربران"
+    },
+    "utils": {
+      "send_test_email": "ارسال ایمیل آزمایشی",
+      "read_password_recovery_html": "پیش‌نمایش ایمیل بازیابی رمز عبور"
+    }
   },
   "settings": {
     "title": "تنظیمات کاربر",
@@ -147,7 +219,8 @@
     "passwordConfirmationRequired": "تأیید رمز عبور الزامی است",
     "confirmYourPassword": "لطفاً رمز عبور خود را تأیید کنید",
     "passwordsDontMatch": "رمزهای عبور مطابقت ندارند",
-    "titleRequired": "عنوان الزامی است"
+    "titleRequired": "عنوان الزامی است",
+    "roleNameRequired": "نام نقش الزامی است"
   },
   "pagination": {
     "previous": "پیشین",
@@ -167,6 +240,7 @@
     "dashboard": "داشبورد - قالب FastAPI",
     "items": "آیتم‌ها - قالب FastAPI",
     "admin": "مدیریت - قالب FastAPI",
+    "roles": "نقش‌ها - قالب FastAPI",
     "settings": "تنظیمات - قالب FastAPI"
   }
 }

@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import type { TFunction } from "i18next"
 import { Pencil } from "lucide-react"
 import { useMemo, useState } from "react"
@@ -7,7 +7,7 @@ import { useForm } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import { z } from "zod"
 
-import { type UserPublic, UsersService } from "@/client"
+import { RolesService, type UserPublic, UsersService } from "@/client"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
@@ -23,6 +23,7 @@ import { DropdownMenuItem } from "@/components/ui/dropdown-menu"
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -30,8 +31,18 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { LoadingButton } from "@/components/ui/loading-button"
+import { PasswordInput } from "@/components/ui/password-input"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import useAuth from "@/hooks/useAuth"
 import useCustomToast from "@/hooks/useCustomToast"
 import { handleError } from "@/utils"
+import { roleLabel } from "./roleLabel"
 
 const createFormSchema = (t: TFunction) =>
   z
@@ -44,7 +55,7 @@ const createFormSchema = (t: TFunction) =>
         .optional()
         .or(z.literal("")),
       confirm_password: z.string().optional(),
-      is_superuser: z.boolean().optional(),
+      role_id: z.string().optional(),
       is_active: z.boolean().optional(),
     })
     .refine(
@@ -67,7 +78,17 @@ const EditUser = ({ user, onSuccess }: EditUserProps) => {
   const queryClient = useQueryClient()
   const { showSuccessToast, showErrorToast } = useCustomToast()
   const { t } = useTranslation()
+  const { hasPermission } = useAuth()
+  const canAssignRole = hasPermission("roles.assign")
   const formSchema = useMemo(() => createFormSchema(t), [t])
+
+  const { data: rolesData } = useQuery({
+    queryKey: ["roles"],
+    queryFn: async () =>
+      (await RolesService.readRoles({ query: { skip: 0, limit: 100 } })).data,
+    enabled: canAssignRole,
+  })
+  const roles = rolesData?.data ?? []
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -76,14 +97,28 @@ const EditUser = ({ user, onSuccess }: EditUserProps) => {
     defaultValues: {
       email: user.email,
       full_name: user.full_name ?? undefined,
-      is_superuser: user.is_superuser,
+      role_id: user.role?.id ?? "",
       is_active: user.is_active,
     },
   })
 
   const mutation = useMutation({
-    mutationFn: (data: FormData) =>
-      UsersService.updateUser({ path: { user_id: user.id }, body: data }),
+    mutationFn: async (data: FormData) => {
+      const { confirm_password: _, role_id, ...submitData } = data
+      if (!submitData.password) {
+        delete submitData.password
+      }
+      await UsersService.updateUser({
+        path: { user_id: user.id },
+        body: submitData,
+      })
+      if (canAssignRole && role_id && role_id !== user.role?.id) {
+        await UsersService.assignUserRole({
+          path: { user_id: user.id },
+          body: { role_id },
+        })
+      }
+    },
     onSuccess: () => {
       showSuccessToast(t("admin.updatedSuccess"))
       setIsOpen(false)
@@ -92,16 +127,12 @@ const EditUser = ({ user, onSuccess }: EditUserProps) => {
     onError: handleError.bind(showErrorToast),
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] })
+      queryClient.invalidateQueries({ queryKey: ["currentUser"] })
     },
   })
 
   const onSubmit = (data: FormData) => {
-    // exclude confirm_password from submission data and remove password if empty
-    const { confirm_password: _, ...submitData } = data
-    if (!submitData.password) {
-      delete submitData.password
-    }
-    mutation.mutate(submitData)
+    mutation.mutate(data)
   }
 
   return (
@@ -170,12 +201,14 @@ const EditUser = ({ user, onSuccess }: EditUserProps) => {
                   <FormItem>
                     <FormLabel>{t("common.setPassword")}</FormLabel>
                     <FormControl>
-                      <Input
+                      <PasswordInput
                         placeholder={t("common.password")}
-                        type="password"
                         {...field}
                       />
                     </FormControl>
+                    <FormDescription>
+                      {t("admin.passwordOptionalHint")}
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -188,9 +221,8 @@ const EditUser = ({ user, onSuccess }: EditUserProps) => {
                   <FormItem>
                     <FormLabel>{t("common.confirmPassword")}</FormLabel>
                     <FormControl>
-                      <Input
+                      <PasswordInput
                         placeholder={t("common.password")}
-                        type="password"
                         {...field}
                       />
                     </FormControl>
@@ -199,23 +231,35 @@ const EditUser = ({ user, onSuccess }: EditUserProps) => {
                 )}
               />
 
-              <FormField
-                control={form.control}
-                name="is_superuser"
-                render={({ field }) => (
-                  <FormItem className="flex items-center gap-3 space-y-0">
-                    <FormControl>
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                    <FormLabel className="font-normal">
-                      {t("admin.isSuperuser")}
-                    </FormLabel>
-                  </FormItem>
-                )}
-              />
+              {canAssignRole && (
+                <FormField
+                  control={form.control}
+                  name="role_id"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t("admin.role")}</FormLabel>
+                      <Select
+                        value={field.value}
+                        onValueChange={field.onChange}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder={t("admin.selectRole")} />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {roles.map((role) => (
+                            <SelectItem key={role.id} value={role.id}>
+                              {roleLabel(role, t)}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
 
               <FormField
                 control={form.control}

@@ -49,6 +49,7 @@
     "dashboard": "Dashboard",
     "items": "Items",
     "admin": "Admin",
+    "roles": "Roles",
     "userSettings": "User Settings",
     "logOut": "Log Out",
     "toggleSidebar": "Toggle Sidebar",
@@ -114,6 +115,16 @@
     "deletedSuccess": "The user was deleted successfully",
     "isSuperuser": "Is superuser?",
     "isActive": "Is active?",
+    "selectRole": "Select a role",
+    "passwordOptionalHint": "Leave blank to keep the current password",
+    "selectAll": "Select all",
+    "selectRow": "Select row",
+    "selectedCount": "{{count}} selected",
+    "deleteSelected": "Delete selected",
+    "deleteSelectedDescription": "You are about to <strong>permanently delete</strong> {{count}} users and all of their items. This action cannot be undone.",
+    "clearSelection": "Clear selection",
+    "bulkDeletedSuccess": "{{count}} users deleted successfully",
+    "bulkDeletePartial": "{{deleted}} deleted, {{failed}} failed",
     "you": "You",
     "role": "Role",
     "superuser": "Superuser",
@@ -121,6 +132,67 @@
     "status": "Status",
     "active": "Active",
     "inactive": "Inactive"
+  },
+  "roles": {
+    "title": "Roles & Permissions",
+    "subtitle": "Manage roles and the permissions they grant",
+    "addRole": "Add Role",
+    "editRole": "Edit Role",
+    "deleteRole": "Delete Role",
+    "addRoleDescription": "Create a custom role and choose which permissions it grants.",
+    "editRoleDescription": "Update the role details and its permissions.",
+    "deleteRoleDescription": "The role \"<strong>{{name}}</strong>\" will be permanently deleted. Are you sure?",
+    "name": "Name",
+    "slug": "Slug",
+    "description": "Description",
+    "permissions": "Permissions",
+    "permissionsCount": "{{count}} permissions",
+    "systemRole": "System",
+    "systemRoleReadOnly": "Read-only",
+    "createdSuccess": "Role created successfully",
+    "updatedSuccess": "Role updated successfully",
+    "deletedSuccess": "Role deleted successfully"
+  },
+  "systemRoles": {
+    "user": "User",
+    "superuser": "Superuser"
+  },
+  "permissionGroups": {
+    "users": "Users",
+    "items": "Items",
+    "roles": "Roles",
+    "utils": "Utilities"
+  },
+  "permissions": {
+    "users": {
+      "read": "Read any user account",
+      "create": "Create user accounts",
+      "update": "Update any user account",
+      "delete": "Delete any user account",
+      "read_self": "Read own account",
+      "update_self": "Update own account",
+      "delete_self": "Delete own account"
+    },
+    "items": {
+      "read_own": "Read own items",
+      "read_any": "Read all items",
+      "create": "Create items",
+      "update_own": "Update own items",
+      "update_any": "Update all items",
+      "delete_own": "Delete own items",
+      "delete_any": "Delete all items"
+    },
+    "roles": {
+      "read": "View roles and permissions",
+      "create": "Create roles",
+      "update": "Update roles",
+      "delete": "Delete roles",
+      "assign": "Assign roles to users"
+    },
+    "utils": {
+      "send_test_email": "Send test emails",
+      "read_password_recovery_html": "Preview password recovery emails"
+    }
   },
   "settings": {
     "title": "User Settings",
@@ -147,7 +219,8 @@
     "passwordConfirmationRequired": "Password confirmation is required",
     "confirmYourPassword": "Please confirm your password",
     "passwordsDontMatch": "The passwords don't match",
-    "titleRequired": "Title is required"
+    "titleRequired": "Title is required",
+    "roleNameRequired": "Role name is required"
   },
   "pagination": {
     "previous": "Previous",
@@ -167,6 +240,7 @@
     "dashboard": "Dashboard - FastAPI Template",
     "items": "Items - FastAPI Template",
     "admin": "Admin - FastAPI Template",
+    "roles": "Roles - FastAPI Template",
     "settings": "Settings - FastAPI Template"
   }
 }

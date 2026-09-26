@@ -2,7 +2,7 @@
 
 import { type Client, type Options as Options2, type TDataShape, urlSearchParamsBodySerializer } from './client';
 import { client } from './client.gen';
-import type { itemsCreateItemData, itemsCreateItemErrors, itemsCreateItemResponses, itemsDeleteItemData, itemsDeleteItemErrors, itemsDeleteItemResponses, itemsReadItemData, itemsReadItemErrors, itemsReadItemResponses, itemsReadItemsData, itemsReadItemsErrors, itemsReadItemsResponses, itemsUpdateItemData, itemsUpdateItemErrors, itemsUpdateItemResponses, loginLoginAccessTokenData, loginLoginAccessTokenErrors, loginLoginAccessTokenResponses, loginRecoverPasswordData, loginRecoverPasswordErrors, loginRecoverPasswordHtmlContentData, loginRecoverPasswordHtmlContentErrors, loginRecoverPasswordHtmlContentResponses, loginRecoverPasswordResponses, loginResetPasswordData, loginResetPasswordErrors, loginResetPasswordResponses, loginTestTokenData, loginTestTokenResponses, privateCreateUserData, privateCreateUserErrors, privateCreateUserResponses, usersCreateUserData, usersCreateUserErrors, usersCreateUserResponses, usersDeleteUserData, usersDeleteUserErrors, usersDeleteUserMeData, usersDeleteUserMeResponses, usersDeleteUserResponses, usersReadUserByIdData, usersReadUserByIdErrors, usersReadUserByIdResponses, usersReadUserMeData, usersReadUserMeResponses, usersReadUsersData, usersReadUsersErrors, usersReadUsersResponses, usersRegisterUserData, usersRegisterUserErrors, usersRegisterUserResponses, usersUpdatePasswordMeData, usersUpdatePasswordMeErrors, usersUpdatePasswordMeResponses, usersUpdateUserData, usersUpdateUserErrors, usersUpdateUserMeData, usersUpdateUserMeErrors, usersUpdateUserMeResponses, usersUpdateUserResponses, utilsHealthCheckData, utilsHealthCheckResponses, utilsTestEmailData, utilsTestEmailErrors, utilsTestEmailResponses } from './types.gen';
+import type { itemsCreateItemData, itemsCreateItemErrors, itemsCreateItemResponses, itemsDeleteItemData, itemsDeleteItemErrors, itemsDeleteItemResponses, itemsReadItemData, itemsReadItemErrors, itemsReadItemResponses, itemsReadItemsData, itemsReadItemsErrors, itemsReadItemsResponses, itemsUpdateItemData, itemsUpdateItemErrors, itemsUpdateItemResponses, loginLoginAccessTokenData, loginLoginAccessTokenErrors, loginLoginAccessTokenResponses, loginRecoverPasswordData, loginRecoverPasswordErrors, loginRecoverPasswordHtmlContentData, loginRecoverPasswordHtmlContentErrors, loginRecoverPasswordHtmlContentResponses, loginRecoverPasswordResponses, loginResetPasswordData, loginResetPasswordErrors, loginResetPasswordResponses, loginTestTokenData, loginTestTokenResponses, privateCreateUserData, privateCreateUserErrors, privateCreateUserResponses, rolesCreateRoleData, rolesCreateRoleErrors, rolesCreateRoleResponses, rolesDeleteRoleData, rolesDeleteRoleErrors, rolesDeleteRoleResponses, rolesReadPermissionsData, rolesReadPermissionsResponses, rolesReadRoleData, rolesReadRoleErrors, rolesReadRoleResponses, rolesReadRolesData, rolesReadRolesErrors, rolesReadRolesResponses, rolesUpdateRoleData, rolesUpdateRoleErrors, rolesUpdateRoleResponses, usersAssignUserRoleData, usersAssignUserRoleErrors, usersAssignUserRoleResponses, usersCreateUserData, usersCreateUserErrors, usersCreateUserResponses, usersDeleteUserData, usersDeleteUserErrors, usersDeleteUserMeData, usersDeleteUserMeResponses, usersDeleteUserResponses, usersReadUserByIdData, usersReadUserByIdErrors, usersReadUserByIdResponses, usersReadUserMeData, usersReadUserMeResponses, usersReadUsersData, usersReadUsersErrors, usersReadUsersResponses, usersRegisterUserData, usersRegisterUserErrors, usersRegisterUserResponses, usersUpdatePasswordMeData, usersUpdatePasswordMeErrors, usersUpdatePasswordMeResponses, usersUpdateUserData, usersUpdateUserErrors, usersUpdateUserMeData, usersUpdateUserMeErrors, usersUpdateUserMeResponses, usersUpdateUserResponses, utilsHealthCheckData, utilsHealthCheckResponses, utilsTestEmailData, utilsTestEmailErrors, utilsTestEmailResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -36,7 +36,7 @@ export class LoginService {
             }
         });
     }
-    
+
     /**
      * Test Token
      *
@@ -50,7 +50,7 @@ export class LoginService {
             ...options
         });
     }
-    
+
     /**
      * Recover Password
      *
@@ -63,7 +63,7 @@ export class LoginService {
             ...options
         });
     }
-    
+
     /**
      * Reset Password
      *
@@ -80,7 +80,7 @@ export class LoginService {
             }
         });
     }
-    
+
     /**
      * Recover Password Html Content
      *
@@ -110,7 +110,7 @@ export class UsersService {
             ...options
         });
     }
-    
+
     /**
      * Create User
      *
@@ -128,7 +128,7 @@ export class UsersService {
             }
         });
     }
-    
+
     /**
      * Delete User Me
      *
@@ -142,11 +142,11 @@ export class UsersService {
             ...options
         });
     }
-    
+
     /**
      * Read User Me
      *
-     * Get current user.
+     * Get current user, including effective permissions.
      */
     public static readUserMe<ThrowOnError extends boolean = true>(options?: Options<usersReadUserMeData, ThrowOnError>) {
         return (options?.client ?? client).get<usersReadUserMeResponses, unknown, ThrowOnError>({
@@ -156,7 +156,7 @@ export class UsersService {
             ...options
         });
     }
-    
+
     /**
      * Update User Me
      *
@@ -174,7 +174,7 @@ export class UsersService {
             }
         });
     }
-    
+
     /**
      * Update Password Me
      *
@@ -192,7 +192,7 @@ export class UsersService {
             }
         });
     }
-    
+
     /**
      * Register User
      *
@@ -209,7 +209,7 @@ export class UsersService {
             }
         });
     }
-    
+
     /**
      * Delete User
      *
@@ -223,7 +223,7 @@ export class UsersService {
             ...options
         });
     }
-    
+
     /**
      * Read User By Id
      *
@@ -237,7 +237,7 @@ export class UsersService {
             ...options
         });
     }
-    
+
     /**
      * Update User
      *
@@ -248,6 +248,118 @@ export class UsersService {
             responseType: 'json',
             security: [{ scheme: 'bearer', type: 'http' }],
             url: '/api/v1/users/{user_id}',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+
+    /**
+     * Assign User Role
+     *
+     * Replace the single role assigned to a user.
+     */
+    public static assignUserRole<ThrowOnError extends boolean = true>(options: Options<usersAssignUserRoleData, ThrowOnError>) {
+        return (options.client ?? client).put<usersAssignUserRoleResponses, usersAssignUserRoleErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/users/{user_id}/role',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+}
+
+export class RolesService {
+    /**
+     * Read Roles
+     *
+     * Retrieve roles.
+     */
+    public static readRoles<ThrowOnError extends boolean = true>(options?: Options<rolesReadRolesData, ThrowOnError>) {
+        return (options?.client ?? client).get<rolesReadRolesResponses, rolesReadRolesErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/roles/',
+            ...options
+        });
+    }
+
+    /**
+     * Create Role
+     *
+     * Create a custom role.
+     */
+    public static createRole<ThrowOnError extends boolean = true>(options: Options<rolesCreateRoleData, ThrowOnError>) {
+        return (options.client ?? client).post<rolesCreateRoleResponses, rolesCreateRoleErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/roles/',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+
+    /**
+     * Read Permissions
+     *
+     * List every permission code known to the application.
+     */
+    public static readPermissions<ThrowOnError extends boolean = true>(options?: Options<rolesReadPermissionsData, ThrowOnError>) {
+        return (options?.client ?? client).get<rolesReadPermissionsResponses, unknown, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/roles/permissions',
+            ...options
+        });
+    }
+
+    /**
+     * Delete Role
+     *
+     * Delete a custom role.
+     */
+    public static deleteRole<ThrowOnError extends boolean = true>(options: Options<rolesDeleteRoleData, ThrowOnError>) {
+        return (options.client ?? client).delete<rolesDeleteRoleResponses, rolesDeleteRoleErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/roles/{role_id}',
+            ...options
+        });
+    }
+
+    /**
+     * Read Role
+     *
+     * Get a role by ID.
+     */
+    public static readRole<ThrowOnError extends boolean = true>(options: Options<rolesReadRoleData, ThrowOnError>) {
+        return (options.client ?? client).get<rolesReadRoleResponses, rolesReadRoleErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/roles/{role_id}',
+            ...options
+        });
+    }
+
+    /**
+     * Update Role
+     *
+     * Update a custom role.
+     */
+    public static updateRole<ThrowOnError extends boolean = true>(options: Options<rolesUpdateRoleData, ThrowOnError>) {
+        return (options.client ?? client).patch<rolesUpdateRoleResponses, rolesUpdateRoleErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/roles/{role_id}',
             ...options,
             headers: {
                 'Content-Type': 'application/json',
@@ -271,7 +383,7 @@ export class UtilsService {
             ...options
         });
     }
-    
+
     /**
      * Health Check
      */
@@ -288,7 +400,7 @@ export class ItemsService {
     /**
      * Read Items
      *
-     * Retrieve items.
+     * Retrieve items the current user is allowed to read.
      */
     public static readItems<ThrowOnError extends boolean = true>(options?: Options<itemsReadItemsData, ThrowOnError>) {
         return (options?.client ?? client).get<itemsReadItemsResponses, itemsReadItemsErrors, ThrowOnError>({
@@ -298,7 +410,7 @@ export class ItemsService {
             ...options
         });
     }
-    
+
     /**
      * Create Item
      *
@@ -316,7 +428,7 @@ export class ItemsService {
             }
         });
     }
-    
+
     /**
      * Delete Item
      *
@@ -330,7 +442,7 @@ export class ItemsService {
             ...options
         });
     }
-    
+
     /**
      * Read Item
      *
@@ -344,7 +456,7 @@ export class ItemsService {
             ...options
         });
     }
-    
+
     /**
      * Update Item
      *

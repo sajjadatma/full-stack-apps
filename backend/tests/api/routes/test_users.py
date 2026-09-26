@@ -126,7 +126,7 @@ def test_get_existing_user_permissions_error(
         headers=normal_user_token_headers,
     )
     assert r.status_code == 403
-    assert r.json() == {"detail": "The user doesn't have enough privileges"}
+    assert r.json() == {"detail": "Not enough permissions"}
 
 
 def test_get_non_existing_user_permissions_error(
@@ -140,7 +140,7 @@ def test_get_non_existing_user_permissions_error(
         headers=normal_user_token_headers,
     )
     assert r.status_code == 403
-    assert r.json() == {"detail": "The user doesn't have enough privileges"}
+    assert r.json() == {"detail": "Not enough permissions"}
 
 
 def test_create_user_existing_username(
@@ -394,6 +394,20 @@ def test_update_user_not_exists(
     assert r.json()["detail"] == "The user with this id does not exist in the system"
 
 
+def test_superuser_cannot_change_own_role_through_legacy_flag(
+    client: TestClient, superuser_token_headers: dict[str, str], db: Session
+) -> None:
+    superuser = crud.get_user_by_email(session=db, email=settings.FIRST_SUPERUSER)
+    assert superuser is not None
+    response = client.patch(
+        f"{settings.API_V1_STR}/users/{superuser.id}",
+        headers=superuser_token_headers,
+        json={"is_superuser": False},
+    )
+    assert response.status_code == 400
+    assert response.json()["detail"] == "You cannot change your own role"
+
+
 def test_update_user_email_exists(
     client: TestClient, superuser_token_headers: dict[str, str], db: Session
 ) -> None:
@@ -518,4 +532,4 @@ def test_delete_user_without_privileges(
         headers=normal_user_token_headers,
     )
     assert r.status_code == 403
-    assert r.json()["detail"] == "The user doesn't have enough privileges"
+    assert r.json()["detail"] == "Not enough permissions"

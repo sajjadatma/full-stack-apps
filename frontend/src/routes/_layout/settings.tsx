@@ -20,7 +20,7 @@ export const Route = createFileRoute("/_layout/settings")({
 })
 
 function UserSettings() {
-  const { user: currentUser } = useAuth()
+  const { user: currentUser, hasPermission } = useAuth()
   const { t } = useTranslation()
 
   if (!currentUser) {
@@ -45,9 +45,12 @@ function UserSettings() {
     },
   ]
 
-  const finalTabs = currentUser.is_superuser
-    ? tabsConfig.slice(0, 3)
-    : tabsConfig
+  const finalTabs = tabsConfig.filter((tab) => {
+    if (tab.value === "my-profile") return hasPermission("users.update_self")
+    if (tab.value === "password") return hasPermission("users.update_self")
+    if (tab.value === "danger-zone") return hasPermission("users.delete_self")
+    return false
+  })
 
   return (
     <div className="flex flex-col gap-6">

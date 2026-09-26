@@ -33,6 +33,7 @@ const PasswordInput = React.forwardRef<HTMLInputElement, PasswordInputProps>(
           type="button"
           variant="ghost"
           size="icon-sm"
+          data-testid="password-toggle"
           className="absolute end-0 top-0 h-full px-3 py-2 hover:bg-transparent"
           onClick={() => setShowPassword(!showPassword)}
           aria-label={

@@ -14,6 +14,96 @@ def get_datetime_utc() -> datetime:
 Locale = Annotated[str, StringConstraints(max_length=10, pattern="^(en|fa)$")]
 
 
+# ---------------------------------------------------------------------------
+# Roles and permissions (RBAC)
+# ---------------------------------------------------------------------------
+
+
+# Link table between roles and permissions.
+class RolePermissionLink(SQLModel, table=True):
+    role_id: uuid.UUID = Field(
+        foreign_key="role.id", primary_key=True, ondelete="CASCADE"
+    )
+    permission_id: uuid.UUID = Field(
+        foreign_key="permission.id", primary_key=True, ondelete="CASCADE"
+    )
+
+
+# Database model, database table inferred from class name
+class Permission(SQLModel, table=True):
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    code: str = Field(unique=True, index=True, max_length=100)
+    description: str | None = Field(default=None, max_length=255)
+    roles: list[Role] = Relationship(
+        back_populates="permissions", link_model=RolePermissionLink
+    )
+
+
+# Shared properties
+class RoleBase(SQLModel):
+    name: str = Field(min_length=1, max_length=100, index=True, unique=True)
+    description: str | None = Field(default=None, max_length=255)
+
+
+# Database model, database table inferred from class name
+class Role(RoleBase, table=True):
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    slug: str = Field(unique=True, index=True, max_length=100)
+    is_system: bool = False
+    created_at: datetime | None = Field(
+        default_factory=get_datetime_utc,
+        sa_type=DateTime(timezone=True),  # type: ignore
+    )
+    permissions: list[Permission] = Relationship(
+        back_populates="roles", link_model=RolePermissionLink
+    )
+    users: list[User] = Relationship(back_populates="role")
+
+
+class PermissionPublic(SQLModel):
+    id: uuid.UUID
+    code: str
+    description: str | None = None
+
+
+class RoleSummary(SQLModel):
+    id: uuid.UUID
+    slug: str
+    name: str
+    is_system: bool
+
+
+class RolePublic(RoleBase):
+    id: uuid.UUID
+    slug: str
+    is_system: bool
+    permissions: list[PermissionPublic] = Field(default_factory=list)
+    created_at: datetime | None = None
+
+
+class RolesPublic(SQLModel):
+    data: list[RolePublic]
+    count: int
+
+
+# Properties to receive via API on role creation.
+class RoleCreate(RoleBase):
+    slug: str | None = Field(default=None, min_length=1, max_length=100)
+    permissions: list[str] = Field(default_factory=list)
+
+
+# Properties to receive via API on role update, all are optional.
+class RoleUpdate(SQLModel):
+    name: str | None = Field(default=None, min_length=1, max_length=100)
+    description: str | None = Field(default=None, max_length=255)
+    permissions: list[str] | None = None
+
+
+# Payload to assign a single role to a user.
+class RoleAssignment(SQLModel):
+    role_id: uuid.UUID
+
+
 # Shared properties
 class UserBase(SQLModel):
     email: EmailStr = Field(unique=True, index=True, max_length=255)
@@ -26,6 +116,7 @@ class UserBase(SQLModel):
 # Properties to receive via API on creation
 class UserCreate(UserBase):
     password: str = Field(min_length=8, max_length=128)
+    role_id: uuid.UUID | None = None
 
 
 class UserRegister(SQLModel):
@@ -64,6 +155,10 @@ class User(UserBase, table=True):
         default_factory=get_datetime_utc,
         sa_type=DateTime(timezone=True),  # type: ignore
     )
+    role_id: uuid.UUID = Field(
+        foreign_key="role.id", nullable=False, index=True, ondelete="RESTRICT"
+    )
+    role: Role | None = Relationship(back_populates="users")
     items: list[Item] = Relationship(back_populates="owner", cascade_delete=True)
 
 
@@ -71,6 +166,12 @@ class User(UserBase, table=True):
 class UserPublic(UserBase):
     id: uuid.UUID
     created_at: datetime | None = None
+    role: RoleSummary | None = None
+
+
+# Properties to return for the authenticated user, including permissions.
+class UserMePublic(UserPublic):
+    permissions: list[str] = Field(default_factory=list)
 
 
 class UsersPublic(SQLModel):

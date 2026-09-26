@@ -510,7 +510,19 @@ def set_primary_product_image(
     return _product_image_public(target)
 
 
-@image_router.get("/{image_id}/content")
+@image_router.get(
+    "/{image_id}/content",
+    response_class=StreamingResponse,
+    responses={
+        200: {
+            "content": {
+                "image/jpeg": {"schema": {"type": "string", "format": "binary"}},
+                "image/png": {"schema": {"type": "string", "format": "binary"}},
+                "image/webp": {"schema": {"type": "string", "format": "binary"}},
+            }
+        }
+    },
+)
 def read_product_image_content(
     *,
     image_id: uuid.UUID,

@@ -35,6 +35,20 @@ export type Body_login_login_access_token = {
 };
 
 /**
+ * Body_products-upload_product_image
+ */
+export type Body_products_upload_product_image = {
+    /**
+     * File
+     */
+    file: Blob | File;
+    /**
+     * Alt Text
+     */
+    alt_text?: string | null;
+};
+
+/**
  * BrandCreate
  */
 export type BrandCreate = {
@@ -463,6 +477,72 @@ export type ProductCreate = {
 };
 
 /**
+ * ProductImageOrder
+ */
+export type ProductImageOrder = {
+    /**
+     * Image Ids
+     */
+    image_ids: Array<string>;
+};
+
+/**
+ * ProductImagePublic
+ */
+export type ProductImagePublic = {
+    /**
+     * Product Id
+     */
+    product_id: string;
+    /**
+     * Storage Key
+     */
+    storage_key: string;
+    /**
+     * Content Type
+     */
+    content_type: string;
+    /**
+     * Url
+     */
+    url?: string | null;
+    /**
+     * Alt Text
+     */
+    alt_text?: string | null;
+    /**
+     * Sort Order
+     */
+    sort_order?: number;
+    /**
+     * Is Primary
+     */
+    is_primary?: boolean;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Created At
+     */
+    created_at?: string | null;
+};
+
+/**
+ * ProductImagesPublic
+ */
+export type ProductImagesPublic = {
+    /**
+     * Data
+     */
+    data: Array<ProductImagePublic>;
+    /**
+     * Count
+     */
+    count: number;
+};
+
+/**
  * ProductPublic
  */
 export type ProductPublic = {
@@ -586,6 +666,10 @@ export type ProductPublic = {
      * Stock State
      */
     stock_state: string;
+    /**
+     * Images
+     */
+    images?: Array<ProductImagePublic>;
 };
 
 /**
@@ -2396,6 +2480,164 @@ export type productsDeactivateProductResponses = {
 };
 
 export type productsDeactivateProductResponse = productsDeactivateProductResponses[keyof productsDeactivateProductResponses];
+
+export type productsUploadProductImageData = {
+    body: Body_products_upload_product_image;
+    path: {
+        /**
+         * Product Id
+         */
+        product_id: string;
+    };
+    query?: never;
+    url: '/api/v1/products/{product_id}/images/';
+};
+
+export type productsUploadProductImageErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type productsUploadProductImageError = productsUploadProductImageErrors[keyof productsUploadProductImageErrors];
+
+export type productsUploadProductImageResponses = {
+    /**
+     * Successful Response
+     */
+    201: ProductImagePublic;
+};
+
+export type productsUploadProductImageResponse = productsUploadProductImageResponses[keyof productsUploadProductImageResponses];
+
+export type productsDeleteProductImageData = {
+    body?: never;
+    path: {
+        /**
+         * Product Id
+         */
+        product_id: string;
+        /**
+         * Image Id
+         */
+        image_id: string;
+    };
+    query?: never;
+    url: '/api/v1/products/{product_id}/images/{image_id}';
+};
+
+export type productsDeleteProductImageErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type productsDeleteProductImageError = productsDeleteProductImageErrors[keyof productsDeleteProductImageErrors];
+
+export type productsDeleteProductImageResponses = {
+    /**
+     * Successful Response
+     */
+    200: Message;
+};
+
+export type productsDeleteProductImageResponse = productsDeleteProductImageResponses[keyof productsDeleteProductImageResponses];
+
+export type productsReorderProductImagesData = {
+    body: ProductImageOrder;
+    path: {
+        /**
+         * Product Id
+         */
+        product_id: string;
+    };
+    query?: never;
+    url: '/api/v1/products/{product_id}/images/order';
+};
+
+export type productsReorderProductImagesErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type productsReorderProductImagesError = productsReorderProductImagesErrors[keyof productsReorderProductImagesErrors];
+
+export type productsReorderProductImagesResponses = {
+    /**
+     * Successful Response
+     */
+    200: ProductImagesPublic;
+};
+
+export type productsReorderProductImagesResponse = productsReorderProductImagesResponses[keyof productsReorderProductImagesResponses];
+
+export type productsSetPrimaryProductImageData = {
+    body?: never;
+    path: {
+        /**
+         * Product Id
+         */
+        product_id: string;
+        /**
+         * Image Id
+         */
+        image_id: string;
+    };
+    query?: never;
+    url: '/api/v1/products/{product_id}/images/{image_id}/primary';
+};
+
+export type productsSetPrimaryProductImageErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type productsSetPrimaryProductImageError = productsSetPrimaryProductImageErrors[keyof productsSetPrimaryProductImageErrors];
+
+export type productsSetPrimaryProductImageResponses = {
+    /**
+     * Successful Response
+     */
+    200: ProductImagePublic;
+};
+
+export type productsSetPrimaryProductImageResponse = productsSetPrimaryProductImageResponses[keyof productsSetPrimaryProductImageResponses];
+
+export type productImagesReadProductImageContentData = {
+    body?: never;
+    path: {
+        /**
+         * Image Id
+         */
+        image_id: string;
+    };
+    query?: never;
+    url: '/api/v1/product-images/{image_id}/content';
+};
+
+export type productImagesReadProductImageContentErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type productImagesReadProductImageContentError = productImagesReadProductImageContentErrors[keyof productImagesReadProductImageContentErrors];
+
+export type productImagesReadProductImageContentResponses = {
+    /**
+     * Successful Response
+     */
+    200: Blob | File;
+};
+
+export type productImagesReadProductImageContentResponse = productImagesReadProductImageContentResponses[keyof productImagesReadProductImageContentResponses];
 
 export type privateCreateUserData = {
     body: PrivateUserCreate;

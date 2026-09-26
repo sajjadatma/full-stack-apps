@@ -16,6 +16,7 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as LayoutIndexRouteImport } from './routes/_layout/index'
 import { Route as LayoutAdminRouteImport } from './routes/_layout/admin'
+import { Route as LayoutCatalogReferencesRouteImport } from './routes/_layout/catalog-references'
 import { Route as LayoutItemsRouteImport } from './routes/_layout/items'
 import { Route as LayoutProductsRouteImport } from './routes/_layout/products'
 import { Route as LayoutRolesRouteImport } from './routes/_layout/roles'
@@ -55,6 +56,11 @@ const LayoutAdminRoute = LayoutAdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => LayoutRoute,
 } as any)
+const LayoutCatalogReferencesRoute = LayoutCatalogReferencesRouteImport.update({
+  id: '/catalog-references',
+  path: '/catalog-references',
+  getParentRoute: () => LayoutRoute,
+} as any)
 const LayoutItemsRoute = LayoutItemsRouteImport.update({
   id: '/items',
   path: '/items',
@@ -83,6 +89,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/admin': typeof LayoutAdminRoute
+  '/catalog-references': typeof LayoutCatalogReferencesRoute
   '/items': typeof LayoutItemsRoute
   '/products': typeof LayoutProductsRoute
   '/roles': typeof LayoutRolesRoute
@@ -94,6 +101,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/admin': typeof LayoutAdminRoute
+  '/catalog-references': typeof LayoutCatalogReferencesRoute
   '/items': typeof LayoutItemsRoute
   '/products': typeof LayoutProductsRoute
   '/roles': typeof LayoutRolesRoute
@@ -108,6 +116,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/_layout/admin': typeof LayoutAdminRoute
+  '/_layout/catalog-references': typeof LayoutCatalogReferencesRoute
   '/_layout/items': typeof LayoutItemsRoute
   '/_layout/products': typeof LayoutProductsRoute
   '/_layout/roles': typeof LayoutRolesRoute
@@ -123,6 +132,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/signup'
     | '/admin'
+    | '/catalog-references'
     | '/items'
     | '/products'
     | '/roles'
@@ -134,6 +144,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/signup'
     | '/admin'
+    | '/catalog-references'
     | '/items'
     | '/products'
     | '/roles'
@@ -147,6 +158,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/signup'
     | '/_layout/admin'
+    | '/_layout/catalog-references'
     | '/_layout/items'
     | '/_layout/products'
     | '/_layout/roles'
@@ -213,6 +225,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutAdminRouteImport
       parentRoute: typeof LayoutRoute
     }
+    '/_layout/catalog-references': {
+      id: '/_layout/catalog-references'
+      path: '/catalog-references'
+      fullPath: '/catalog-references'
+      preLoaderRoute: typeof LayoutCatalogReferencesRouteImport
+      parentRoute: typeof LayoutRoute
+    }
     '/_layout/items': {
       id: '/_layout/items'
       path: '/items'
@@ -246,6 +265,7 @@ declare module '@tanstack/react-router' {
 
 interface LayoutRouteChildren {
   LayoutAdminRoute: typeof LayoutAdminRoute
+  LayoutCatalogReferencesRoute: typeof LayoutCatalogReferencesRoute
   LayoutItemsRoute: typeof LayoutItemsRoute
   LayoutProductsRoute: typeof LayoutProductsRoute
   LayoutRolesRoute: typeof LayoutRolesRoute
@@ -255,6 +275,7 @@ interface LayoutRouteChildren {
 
 const LayoutRouteChildren: LayoutRouteChildren = {
   LayoutAdminRoute: LayoutAdminRoute,
+  LayoutCatalogReferencesRoute: LayoutCatalogReferencesRoute,
   LayoutItemsRoute: LayoutItemsRoute,
   LayoutProductsRoute: LayoutProductsRoute,
   LayoutRolesRoute: LayoutRolesRoute,

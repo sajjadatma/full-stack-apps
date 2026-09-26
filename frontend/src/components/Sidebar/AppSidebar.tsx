@@ -1,4 +1,11 @@
-import { Briefcase, Home, Package, ShieldCheck, Users } from "lucide-react"
+import {
+  Briefcase,
+  FolderTree,
+  Home,
+  Package,
+  ShieldCheck,
+  Users,
+} from "lucide-react"
 import { useTranslation } from "react-i18next"
 
 import { SidebarAppearance } from "@/components/Common/Appearance"
@@ -31,6 +38,19 @@ export function AppSidebar() {
       icon: Package,
       title: t("navigation.products"),
       path: "/products",
+    })
+  }
+  const canReadReferences =
+    hasPermission("products.read") || hasPermission("products.read_any")
+  const canManageReferences =
+    hasPermission("products.create") ||
+    hasPermission("products.update") ||
+    hasPermission("products.delete")
+  if (canReadReferences && canManageReferences) {
+    items.push({
+      icon: FolderTree,
+      title: t("navigation.catalogReferences"),
+      path: "/catalog-references",
     })
   }
   if (hasPermission("users.read")) {

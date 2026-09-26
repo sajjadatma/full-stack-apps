@@ -1,12 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { createFileRoute, redirect } from "@tanstack/react-router"
-import {
-  Image,
-  LoaderCircle,
-  Package,
-  Search,
-  SlidersHorizontal,
-} from "lucide-react"
+import { LoaderCircle, Package, Search, SlidersHorizontal } from "lucide-react"
 import { useEffect, useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
 import type { BrandPublic, CategoryPublic, ProductPublic } from "@/client"
@@ -17,6 +11,7 @@ import {
   UsersService,
 } from "@/client"
 import { ProductFormDialog } from "@/components/Products/ProductFormDialog"
+import { ProductImageThumbnail } from "@/components/Products/ProductImageThumbnail"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -190,6 +185,7 @@ function ProductsPage() {
   )
   const canCreate = hasPermission("products.create")
   const canUpdate = hasPermission("products.update")
+  const canManageImages = hasPermission("products.manage_images")
   const canReadAll = hasPermission("products.read_any")
 
   useEffect(() => {
@@ -319,6 +315,7 @@ function ProductsPage() {
           brands={brands}
           canCreate={canCreate}
           canUpdate={canUpdate}
+          canManageImages={canManageImages}
         />
       </div>
 
@@ -617,6 +614,7 @@ function ProductsPage() {
                         ?.name ?? t("common.na")
                     }
                     canUpdate={canUpdate}
+                    canManageImages={canManageImages}
                     categories={categories}
                     brands={brands}
                     onDeactivate={() => deactivateMutation.mutate(product.id)}
@@ -698,6 +696,7 @@ function ProductRow({
   categoryName,
   brandName,
   canUpdate,
+  canManageImages,
   categories,
   brands,
   onDeactivate,
@@ -708,6 +707,7 @@ function ProductRow({
   categoryName: string
   brandName: string
   canUpdate: boolean
+  canManageImages: boolean
   categories: CategoryPublic[]
   brands: BrandPublic[]
   onDeactivate: () => void
@@ -737,12 +737,13 @@ function ProductRow({
   return (
     <TableRow className="hover:bg-surface-container-high/60">
       <TableCell>
-        <div
-          className="grid size-12 place-items-center rounded-md bg-surface-container-high text-on-surface-variant"
-          aria-hidden="true"
-        >
-          <Image className="size-5" />
-        </div>
+        <ProductImageThumbnail
+          image={product.images?.find((image) => image.is_primary)}
+          productId={product.id}
+          alt={product.name}
+          fallbackLabel={t("products.imagePlaceholder")}
+          className="size-12"
+        />
       </TableCell>
       <TableCell className="min-w-48">
         <div className="font-medium text-on-surface">{product.name}</div>
@@ -780,7 +781,7 @@ function ProductRow({
         )}
       </TableCell>
       <TableCell>
-        {canUpdate && (
+        {(canUpdate || canManageImages) && (
           <div className="flex items-center gap-2">
             <ProductFormDialog
               product={product}
@@ -788,6 +789,7 @@ function ProductRow({
               brands={brands}
               canCreate={false}
               canUpdate={canUpdate}
+              canManageImages={canManageImages}
             />
             {product.is_active && (
               <Button

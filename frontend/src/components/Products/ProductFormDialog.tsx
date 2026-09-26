@@ -1,17 +1,23 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { Check, Plus } from "lucide-react"
 import type { FormEvent } from "react"
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 
 import {
   type BrandPublic,
   type CategoryPublic,
   type ProductCreate,
+  type ProductImagePublic,
   type ProductPublic,
   ProductsService,
   type ProductUpdate,
 } from "@/client"
+import {
+  allowedImageTypes,
+  ProductImagesEditor,
+  type ProductImageUpload,
+} from "@/components/Products/ProductImagesEditor"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -328,6 +334,7 @@ interface ProductFormDialogProps {
   product?: ProductPublic
   canCreate: boolean
   canUpdate: boolean
+  canManageImages: boolean
 }
 
 export function ProductFormDialog({
@@ -336,32 +343,170 @@ export function ProductFormDialog({
   product,
   canCreate,
   canUpdate,
+  canManageImages,
 }: ProductFormDialogProps) {
   const { t } = useTranslation()
   const { showSuccessToast, showErrorToast } = useCustomToast()
   const queryClient = useQueryClient()
   const [open, setOpen] = useState(false)
   const [draft, setDraft] = useState<Draft>(() => toDraft(product))
-  const editing = Boolean(product)
+  const [createdProduct, setCreatedProduct] = useState<ProductPublic>()
+  const [images, setImages] = useState<ProductImagePublic[]>(
+    product?.images ?? [],
+  )
+  const [uploads, setUploads] = useState<ProductImageUpload[]>([])
+  const [isUploading, setIsUploading] = useState(false)
+  const [isLoadingImages, setIsLoadingImages] = useState(
+    Boolean(product && canManageImages),
+  )
+  const productRef = useRef(product)
+  const showErrorToastRef = useRef(showErrorToast)
+  productRef.current = product
+  showErrorToastRef.current = showErrorToast
+  const savedProduct = product ?? createdProduct
+  const editing = Boolean(savedProduct)
+  const canEditDetails = product
+    ? canUpdate
+    : createdProduct
+      ? canUpdate
+      : canCreate
+  const hasUnfinishedUploads = uploads.some(
+    (upload) => upload.status === "queued" || upload.status === "failed",
+  )
 
   useEffect(() => {
-    if (open) setDraft(toDraft(product))
-  }, [open, product])
+    if (!open) return
+    const currentProduct = productRef.current
+    setDraft(toDraft(currentProduct))
+    setCreatedProduct(undefined)
+    setImages(currentProduct?.images ?? [])
+    setUploads([])
+    if (currentProduct && canManageImages) {
+      setIsLoadingImages(true)
+      let active = true
+      void ProductsService.readProduct({
+        path: { product_id: currentProduct.id },
+      })
+        .then((response) => {
+          if (active) {
+            setImages(response.data.images ?? [])
+            queryClient.setQueryData(
+              ["product-detail", currentProduct.id],
+              response.data,
+            )
+          }
+        })
+        .catch((error) =>
+          handleError.bind(showErrorToastRef.current)(error as Error),
+        )
+        .finally(() => {
+          if (active) setIsLoadingImages(false)
+        })
+      return () => {
+        active = false
+      }
+    }
+  }, [open, canManageImages, queryClient])
+
+  const uploadFiles = async (productId: string, uploadIds?: string[]) => {
+    const pending = uploads.filter(
+      (upload) =>
+        (upload.status === "queued" || upload.status === "failed") &&
+        (!uploadIds || uploadIds.includes(upload.id)),
+    )
+    if (pending.length === 0) return false
+    setIsUploading(true)
+    let hadFailure = false
+    try {
+      for (const upload of pending) {
+        setUploads((current) =>
+          current.map((item) =>
+            item.id === upload.id ? { ...item, status: "uploading" } : item,
+          ),
+        )
+        if (!allowedImageTypes.has(upload.file.type)) {
+          hadFailure = true
+          setUploads((current) =>
+            current.map((item) =>
+              item.id === upload.id ? { ...item, status: "failed" } : item,
+            ),
+          )
+          showErrorToast(
+            t("products.images.invalidFormat", { file: upload.file.name }),
+          )
+          continue
+        }
+        try {
+          const response = await ProductsService.uploadProductImage({
+            path: { product_id: productId },
+            body: { file: upload.file, alt_text: upload.file.name },
+          })
+          const refreshed = await ProductsService.readProduct({
+            path: { product_id: productId },
+          })
+          await queryClient.cancelQueries({
+            queryKey: ["product-detail", productId],
+          })
+          queryClient.setQueryData(
+            ["product-detail", productId],
+            refreshed.data,
+          )
+          setImages(refreshed.data.images ?? [response.data])
+          setUploads((current) =>
+            current.map((item) =>
+              item.id === upload.id ? { ...item, status: "success" } : item,
+            ),
+          )
+          await queryClient.invalidateQueries({ queryKey: ["products"] })
+        } catch (error) {
+          hadFailure = true
+          setUploads((current) =>
+            current.map((item) =>
+              item.id === upload.id ? { ...item, status: "failed" } : item,
+            ),
+          )
+          handleError.bind(showErrorToast)(error as Error)
+        }
+      }
+    } finally {
+      setIsUploading(false)
+    }
+    return hadFailure
+  }
 
   const mutation = useMutation({
-    mutationFn: (payload: ProductCreate) =>
-      product
-        ? ProductsService.updateProduct({
+    mutationFn: async (payload: ProductCreate) => {
+      if (product) {
+        return (
+          await ProductsService.updateProduct({
             path: { product_id: product.id },
             body: updatePayloadFromDraft(draft),
           })
-        : ProductsService.createProduct({ body: payload }),
-    onSuccess: () => {
+        ).data
+      }
+      if (createdProduct) {
+        if (!canUpdate) return createdProduct
+        return (
+          await ProductsService.updateProduct({
+            path: { product_id: createdProduct.id },
+            body: updatePayloadFromDraft(draft),
+          })
+        ).data
+      }
+      return (await ProductsService.createProduct({ body: payload })).data
+    },
+    onSuccess: async (saved) => {
+      if (!product) setCreatedProduct(saved)
+      setImages(saved.images ?? [])
+      const failedUploads = canManageImages
+        ? await uploadFiles(saved.id)
+        : false
+      void queryClient.invalidateQueries({ queryKey: ["products"] })
+      if (failedUploads) return
       showSuccessToast(
         t(editing ? "products.updatedSuccess" : "products.createdSuccess"),
       )
       setOpen(false)
-      void queryClient.invalidateQueries({ queryKey: ["products"] })
     },
     onError: handleError.bind(showErrorToast),
   })
@@ -371,14 +516,49 @@ export function ProductFormDialog({
 
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
+    if (!canEditDetails) return
     mutation.mutate(payloadFromDraft(draft))
   }
 
-  if ((!editing && !canCreate) || (editing && !canUpdate)) return null
+  const addUploads = (files: File[]) => {
+    setUploads((current) => [
+      ...current,
+      ...files.map((file) => ({
+        id: crypto.randomUUID(),
+        file,
+        status: "queued" as const,
+      })),
+    ])
+  }
+
+  const retryUpload = async (uploadId: string) => {
+    if (!savedProduct) return
+    const failed = await uploadFiles(savedProduct.id, [uploadId])
+    const unfinished = uploads.some(
+      (upload) =>
+        upload.id !== uploadId &&
+        (upload.status === "queued" || upload.status === "failed"),
+    )
+    if (!failed && !unfinished) setOpen(false)
+  }
+
+  const onOpenChange = (nextOpen: boolean) => {
+    if (
+      !nextOpen &&
+      (mutation.isPending || isUploading || hasUnfinishedUploads)
+    ) {
+      return
+    }
+    setOpen(nextOpen)
+  }
+
+  if ((!product && !canCreate) || (product && !canUpdate && !canManageImages)) {
+    return null
+  }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      {!editing && (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      {!product && canCreate && (
         <DialogTrigger asChild>
           <Button>
             <Plus className="me-2 size-4" />
@@ -386,9 +566,9 @@ export function ProductFormDialog({
           </Button>
         </DialogTrigger>
       )}
-      {editing && (
+      {product && (canUpdate || canManageImages) && (
         <Button variant="outline" size="sm" onClick={() => setOpen(true)}>
-          {t("common.edit")}
+          {canUpdate ? t("common.edit") : t("products.images.manage")}
         </Button>
       )}
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-4xl">
@@ -399,214 +579,247 @@ export function ProductFormDialog({
           <DialogDescription>{t("products.formDescription")}</DialogDescription>
         </DialogHeader>
         <form onSubmit={submit} className="grid gap-5">
-          <section className="grid gap-4 border-b border-outline-variant pb-5">
-            <h3 className="text-title-medium">{t("products.identity")}</h3>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              <TextField
-                label={t("products.name")}
-                value={draft.name}
-                onChange={(v) => update("name", v)}
-                required
-              />
-              <TextField
-                label={t("products.sku")}
-                value={draft.sku}
-                onChange={(v) => update("sku", v)}
-                required
-              />
-              <TextField
-                label={t("products.slug")}
-                value={draft.slug}
-                onChange={(v) => update("slug", v)}
-                required
-              />
-              <SelectField
-                label={t("products.category")}
-                value={draft.category_id}
-                onChange={(v) => update("category_id", v)}
-                options={categories.map((category) => ({
-                  value: category.id,
-                  label: category.name,
-                }))}
-                placeholder={t("products.selectCategory")}
-                required
-              />
-              <SelectField
-                label={t("products.brand")}
-                value={draft.brand_id}
-                onChange={(v) => update("brand_id", v)}
-                options={brands.map((brand) => ({
-                  value: brand.id,
-                  label: brand.name,
-                }))}
-                placeholder={t("products.noBrand")}
-              />
-              <TextField
-                label={t("products.productType")}
-                value={draft.product_type}
-                onChange={(v) => update("product_type", v)}
-              />
-            </div>
-            <label className="grid gap-1.5 text-label-large text-on-surface">
-              {t("products.description")}
-              <textarea
-                className="min-h-24 rounded-xs border border-outline bg-transparent px-4 py-3 text-body-medium outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/25"
-                value={draft.description}
-                onChange={(event) => update("description", event.target.value)}
-              />
-            </label>
-          </section>
+          <fieldset disabled={!canEditDetails} className="contents">
+            <section className="grid gap-4 border-b border-outline-variant pb-5">
+              <h3 className="text-title-medium">{t("products.identity")}</h3>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <TextField
+                  label={t("products.name")}
+                  value={draft.name}
+                  onChange={(v) => update("name", v)}
+                  required
+                />
+                <TextField
+                  label={t("products.sku")}
+                  value={draft.sku}
+                  onChange={(v) => update("sku", v)}
+                  required
+                />
+                <TextField
+                  label={t("products.slug")}
+                  value={draft.slug}
+                  onChange={(v) => update("slug", v)}
+                  required
+                />
+                <SelectField
+                  label={t("products.category")}
+                  value={draft.category_id}
+                  onChange={(v) => update("category_id", v)}
+                  options={categories.map((category) => ({
+                    value: category.id,
+                    label: category.name,
+                  }))}
+                  placeholder={t("products.selectCategory")}
+                  required
+                />
+                <SelectField
+                  label={t("products.brand")}
+                  value={draft.brand_id}
+                  onChange={(v) => update("brand_id", v)}
+                  options={brands.map((brand) => ({
+                    value: brand.id,
+                    label: brand.name,
+                  }))}
+                  placeholder={t("products.noBrand")}
+                />
+                <TextField
+                  label={t("products.productType")}
+                  value={draft.product_type}
+                  onChange={(v) => update("product_type", v)}
+                />
+              </div>
+              <label className="grid gap-1.5 text-label-large text-on-surface">
+                {t("products.description")}
+                <textarea
+                  className="min-h-24 rounded-xs border border-outline bg-transparent px-4 py-3 text-body-medium outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/25"
+                  value={draft.description}
+                  onChange={(event) =>
+                    update("description", event.target.value)
+                  }
+                />
+              </label>
+            </section>
 
-          <section className="grid gap-4 border-b border-outline-variant pb-5">
-            <h3 className="text-title-medium">
-              {t("products.specifications")}
-            </h3>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              <TextField
-                label={t("products.material")}
-                value={draft.material}
-                onChange={(v) => update("material", v)}
+            <section className="grid gap-4 border-b border-outline-variant pb-5">
+              <h3 className="text-title-medium">
+                {t("products.specifications")}
+              </h3>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <TextField
+                  label={t("products.material")}
+                  value={draft.material}
+                  onChange={(v) => update("material", v)}
+                />
+                <TextField
+                  label={t("products.finish")}
+                  value={draft.finish}
+                  onChange={(v) => update("finish", v)}
+                />
+                <TextField
+                  label={t("products.usageArea")}
+                  value={draft.usage_area}
+                  onChange={(v) => update("usage_area", v)}
+                />
+                <TextField
+                  label={t("products.colorFamily")}
+                  value={draft.color_family}
+                  onChange={(v) => update("color_family", v)}
+                />
+                <TextField
+                  label={t("products.widthMm")}
+                  type="number"
+                  min="1"
+                  value={draft.width_mm}
+                  onChange={(v) => update("width_mm", v)}
+                />
+                <TextField
+                  label={t("products.heightMm")}
+                  type="number"
+                  min="1"
+                  value={draft.height_mm}
+                  onChange={(v) => update("height_mm", v)}
+                />
+                <TextField
+                  label={t("products.thicknessMm")}
+                  type="number"
+                  min="1"
+                  value={draft.thickness_mm}
+                  onChange={(v) => update("thickness_mm", v)}
+                />
+                <TextField
+                  label={t("products.antiSlipRating")}
+                  value={draft.anti_slip_rating}
+                  onChange={(v) => update("anti_slip_rating", v)}
+                />
+                <TextField
+                  label={t("products.waterAbsorption")}
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={draft.water_absorption_percent}
+                  onChange={(v) => update("water_absorption_percent", v)}
+                />
+                <TextField
+                  label={t("products.countryOfOrigin")}
+                  value={draft.country_of_origin}
+                  onChange={(v) => update("country_of_origin", v)}
+                />
+                <TextField
+                  label={t("products.piecesPerBox")}
+                  type="number"
+                  min="1"
+                  value={draft.pieces_per_box}
+                  onChange={(v) => update("pieces_per_box", v)}
+                />
+                <TextField
+                  label={t("products.sqmPerBox")}
+                  type="number"
+                  min="0"
+                  step="0.001"
+                  value={draft.sqm_per_box}
+                  onChange={(v) => update("sqm_per_box", v)}
+                />
+                <TextField
+                  label={t("products.kgPerBox")}
+                  type="number"
+                  min="0"
+                  step="0.001"
+                  value={draft.kg_per_box}
+                  onChange={(v) => update("kg_per_box", v)}
+                />
+              </div>
+              <CheckField
+                label={t("products.rectified")}
+                checked={draft.rectified}
+                onChange={(v) => update("rectified", v)}
               />
-              <TextField
-                label={t("products.finish")}
-                value={draft.finish}
-                onChange={(v) => update("finish", v)}
-              />
-              <TextField
-                label={t("products.usageArea")}
-                value={draft.usage_area}
-                onChange={(v) => update("usage_area", v)}
-              />
-              <TextField
-                label={t("products.colorFamily")}
-                value={draft.color_family}
-                onChange={(v) => update("color_family", v)}
-              />
-              <TextField
-                label={t("products.widthMm")}
-                type="number"
-                min="1"
-                value={draft.width_mm}
-                onChange={(v) => update("width_mm", v)}
-              />
-              <TextField
-                label={t("products.heightMm")}
-                type="number"
-                min="1"
-                value={draft.height_mm}
-                onChange={(v) => update("height_mm", v)}
-              />
-              <TextField
-                label={t("products.thicknessMm")}
-                type="number"
-                min="1"
-                value={draft.thickness_mm}
-                onChange={(v) => update("thickness_mm", v)}
-              />
-              <TextField
-                label={t("products.antiSlipRating")}
-                value={draft.anti_slip_rating}
-                onChange={(v) => update("anti_slip_rating", v)}
-              />
-              <TextField
-                label={t("products.waterAbsorption")}
-                type="number"
-                min="0"
-                step="0.01"
-                value={draft.water_absorption_percent}
-                onChange={(v) => update("water_absorption_percent", v)}
-              />
-              <TextField
-                label={t("products.countryOfOrigin")}
-                value={draft.country_of_origin}
-                onChange={(v) => update("country_of_origin", v)}
-              />
-              <TextField
-                label={t("products.piecesPerBox")}
-                type="number"
-                min="1"
-                value={draft.pieces_per_box}
-                onChange={(v) => update("pieces_per_box", v)}
-              />
-              <TextField
-                label={t("products.sqmPerBox")}
-                type="number"
-                min="0"
-                step="0.001"
-                value={draft.sqm_per_box}
-                onChange={(v) => update("sqm_per_box", v)}
-              />
-              <TextField
-                label={t("products.kgPerBox")}
-                type="number"
-                min="0"
-                step="0.001"
-                value={draft.kg_per_box}
-                onChange={(v) => update("kg_per_box", v)}
-              />
-            </div>
-            <CheckField
-              label={t("products.rectified")}
-              checked={draft.rectified}
-              onChange={(v) => update("rectified", v)}
+            </section>
+
+            <section className="grid gap-4">
+              <h3 className="text-title-medium">
+                {t("products.stockAndPricing")}
+              </h3>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <TextField
+                  label={t("products.price")}
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={draft.price}
+                  onChange={(v) => update("price", v)}
+                />
+                <TextField
+                  label={t("products.stockQuantity")}
+                  type="number"
+                  min="0"
+                  value={draft.stock_quantity}
+                  onChange={(v) => update("stock_quantity", v)}
+                  required
+                />
+                <TextField
+                  label={t("products.lowStockThreshold")}
+                  type="number"
+                  min="0"
+                  value={draft.low_stock_threshold}
+                  onChange={(v) => update("low_stock_threshold", v)}
+                />
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <CheckField
+                  label={t("products.active")}
+                  checked={draft.is_active}
+                  onChange={(v) => update("is_active", v)}
+                />
+                <CheckField
+                  label={t("products.featured")}
+                  checked={draft.is_featured}
+                  onChange={(v) => update("is_featured", v)}
+                />
+              </div>
+            </section>
+          </fieldset>
+
+          {canManageImages && (
+            <ProductImagesEditor
+              productId={savedProduct?.id}
+              images={images}
+              uploads={uploads}
+              uploading={isUploading}
+              loading={isLoadingImages}
+              onImagesChange={setImages}
+              onQueueFiles={addUploads}
+              onRemoveUpload={(uploadId) =>
+                setUploads((current) =>
+                  current.filter((upload) => upload.id !== uploadId),
+                )
+              }
+              onUploadFiles={() => {
+                if (savedProduct) void uploadFiles(savedProduct.id)
+              }}
+              onRetryUpload={(uploadId) => void retryUpload(uploadId)}
             />
-          </section>
-
-          <section className="grid gap-4">
-            <h3 className="text-title-medium">
-              {t("products.stockAndPricing")}
-            </h3>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              <TextField
-                label={t("products.price")}
-                type="number"
-                min="0"
-                step="0.01"
-                value={draft.price}
-                onChange={(v) => update("price", v)}
-              />
-              <TextField
-                label={t("products.stockQuantity")}
-                type="number"
-                min="0"
-                value={draft.stock_quantity}
-                onChange={(v) => update("stock_quantity", v)}
-                required
-              />
-              <TextField
-                label={t("products.lowStockThreshold")}
-                type="number"
-                min="0"
-                value={draft.low_stock_threshold}
-                onChange={(v) => update("low_stock_threshold", v)}
-              />
-            </div>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <CheckField
-                label={t("products.active")}
-                checked={draft.is_active}
-                onChange={(v) => update("is_active", v)}
-              />
-              <CheckField
-                label={t("products.featured")}
-                checked={draft.is_featured}
-                onChange={(v) => update("is_featured", v)}
-              />
-            </div>
-          </section>
+          )}
           <DialogFooter className="sticky bottom-0 -mx-6 -mb-6 border-t border-outline-variant bg-surface-container-high p-6">
             <Button
               type="button"
               variant="outline"
               onClick={() => setOpen(false)}
-              disabled={mutation.isPending}
+              disabled={
+                mutation.isPending || isUploading || hasUnfinishedUploads
+              }
             >
               {t("common.cancel")}
             </Button>
-            <LoadingButton type="submit" loading={mutation.isPending}>
-              <Check className="me-2 size-4" />
-              {t("common.save")}
-            </LoadingButton>
+            {canEditDetails && (
+              <LoadingButton
+                type="submit"
+                loading={mutation.isPending || isUploading}
+                disabled={isUploading}
+              >
+                <Check className="me-2 size-4" />
+                {t("common.save")}
+              </LoadingButton>
+            )}
           </DialogFooter>
         </form>
       </DialogContent>

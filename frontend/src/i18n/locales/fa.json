@@ -64,6 +64,7 @@
     "morePages": "صفحات بیشتر"
   },
   "auth": {
+    "brandTagline": "تجربه‌ای با الهام از Material 3 برای قالب فول‌استک FastAPI.",
     "loginTitle": "ورود به حساب کاربری",
     "loginButton": "ورود",
     "forgotPassword": "رمز عبور خود را فراموش کرده‌اید؟",
@@ -83,7 +84,13 @@
   },
   "dashboard": {
     "greeting": "سلام، {{name}} 👋",
-    "welcomeBack": "خوش آمدید، خوب است که دوباره شما را می‌بینیم!"
+    "welcomeBack": "خوش آمدید، خوب است که دوباره شما را می‌بینیم!",
+    "accountTitle": "حساب کاربری شما",
+    "signedInAs": "وارد شده به‌عنوان",
+    "quickLinksTitle": "دسترسی سریع",
+    "quickLinksSubtitle": "به فضای کاری خود بازگردید",
+    "itemsCardDescription": "آیتم‌های خود را ایجاد و مدیریت کنید",
+    "adminCardDescription": "کاربران و نقش‌ها را مدیریت کنید"
   },
   "items": {
     "title": "آیتم‌ها",

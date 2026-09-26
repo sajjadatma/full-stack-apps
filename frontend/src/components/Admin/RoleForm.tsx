@@ -208,7 +208,7 @@ const RoleForm = ({ permissions, role }: RoleFormProps) => {
                 <div className="grid max-h-64 gap-4 overflow-y-auto rounded-md border p-3">
                   {groups.map(([group, groupPermissions]) => (
                     <div key={group} className="grid gap-2">
-                      <p className="text-xs font-semibold uppercase text-muted-foreground">
+                      <p className="text-label-medium uppercase text-on-surface-variant">
                         {t(`permissionGroups.${group}`, {
                           defaultValue: group,
                         })}

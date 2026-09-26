@@ -46,13 +46,30 @@ test.describe("Role administration", () => {
   test("permission UI is localized in Farsi", async ({ page }) => {
     await page.goto("/roles")
     await page.getByTestId("language-button").click()
+    await page.getByTestId("language-en").click()
+    await expect(page.getByTestId("language-en")).toBeHidden()
+
+    await page.getByTestId("language-button").click()
     await page.getByTestId("language-fa").click()
 
     await expect(page.locator("html")).toHaveAttribute("dir", "rtl")
     await expect(
       page.getByRole("heading", { name: "نقش‌ها و دسترسی‌ها" }),
     ).toBeVisible()
-    await page.getByTestId("language-button").click()
-    await page.getByTestId("language-en").click()
+
+    // Restore English and wait for it to persist so later tests are unaffected.
+    await expect(page.getByTestId("language-fa")).toBeHidden()
+    await Promise.all([
+      page.waitForResponse(
+        (response) =>
+          response.url().includes("/users/me") &&
+          response.request().method() === "PATCH",
+      ),
+      (async () => {
+        await page.getByTestId("language-button").click()
+        await page.getByTestId("language-en").click()
+      })(),
+    ])
+    await expect(page.locator("html")).toHaveAttribute("lang", "en")
   })
 })

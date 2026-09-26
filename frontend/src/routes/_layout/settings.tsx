@@ -55,10 +55,12 @@ function UserSettings() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">
+        <h1 className="text-headline-small text-on-surface">
           {t("settings.title")}
         </h1>
-        <p className="text-muted-foreground">{t("settings.subtitle")}</p>
+        <p className="text-body-medium text-on-surface-variant">
+          {t("settings.subtitle")}
+        </p>
       </div>
 
       <Tabs defaultValue="my-profile">

@@ -31,14 +31,18 @@ function UserInfo({ fullName, email }: UserInfoProps) {
 
   return (
     <div className="flex items-center gap-2.5 w-full min-w-0">
-      <Avatar className="size-8">
-        <AvatarFallback className="bg-zinc-600 text-white">
+      <Avatar className="size-9">
+        <AvatarFallback className="bg-primary text-on-primary text-label-large">
           {getInitials(fullName || t("common.userFallback"))}
         </AvatarFallback>
       </Avatar>
       <div className="flex flex-col items-start min-w-0">
-        <p className="text-sm font-medium truncate w-full">{fullName}</p>
-        <p className="text-xs text-muted-foreground truncate w-full">{email}</p>
+        <p className="text-label-large text-on-surface truncate w-full">
+          {fullName}
+        </p>
+        <p className="text-label-medium text-on-surface-variant truncate w-full">
+          {email}
+        </p>
       </div>
     </div>
   )
@@ -68,7 +72,7 @@ export function User({ user }: { user: any }) {
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton
               size="lg"
-              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+              className="data-[state=open]:bg-secondary-container data-[state=open]:text-on-secondary-container"
               data-testid="user-menu"
             >
               <UserInfo fullName={user?.full_name} email={user?.email} />
@@ -79,7 +83,7 @@ export function User({ user }: { user: any }) {
             className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
             side={isMobile ? "bottom" : isRtl ? "left" : "right"}
             align="end"
-            sideOffset={4}
+            sideOffset={8}
           >
             <DropdownMenuLabel className="p-0 font-normal">
               <UserInfo fullName={user?.full_name} email={user?.email} />

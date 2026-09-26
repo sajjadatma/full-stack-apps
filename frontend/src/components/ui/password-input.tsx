@@ -20,10 +20,10 @@ const PasswordInput = React.forwardRef<HTMLInputElement, PasswordInputProps>(
           type={showPassword ? "text" : "password"}
           data-slot="input"
           className={cn(
-            "file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground dark:bg-input/30 border-input h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 pe-10 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
-            "focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]",
-            "aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive",
-            className
+            "placeholder:text-on-surface-variant selection:bg-primary selection:text-on-primary h-11 w-full min-w-0 rounded-xs border border-outline bg-transparent px-4 py-2 pe-11 text-base transition-[color,box-shadow,border-color] outline-none disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-40",
+            "hover:border-on-surface focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/25",
+            "aria-invalid:border-destructive aria-invalid:ring-destructive/20",
+            className,
           )}
           ref={ref}
           aria-invalid={!!error}
@@ -34,23 +34,21 @@ const PasswordInput = React.forwardRef<HTMLInputElement, PasswordInputProps>(
           variant="ghost"
           size="icon-sm"
           data-testid="password-toggle"
-          className="absolute end-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+          className="absolute end-1 top-1/2 -translate-y-1/2 text-on-surface-variant"
           onClick={() => setShowPassword(!showPassword)}
           aria-label={
-            showPassword
-              ? t("common.hidePassword")
-              : t("common.showPassword")
+            showPassword ? t("common.hidePassword") : t("common.showPassword")
           }
         >
           {showPassword ? (
-            <EyeOff className="h-4 w-4 text-muted-foreground" />
+            <EyeOff className="h-4 w-4" />
           ) : (
-            <Eye className="h-4 w-4 text-muted-foreground" />
+            <Eye className="h-4 w-4" />
           )}
         </Button>
       </div>
     )
-  }
+  },
 )
 
 PasswordInput.displayName = "PasswordInput"

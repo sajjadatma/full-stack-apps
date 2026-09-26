@@ -132,10 +132,12 @@ const RolesManager = () => {
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">
+          <h1 className="text-headline-small text-on-surface">
             {t("roles.title")}
           </h1>
-          <p className="text-muted-foreground">{t("roles.subtitle")}</p>
+          <p className="text-body-medium text-on-surface-variant">
+            {t("roles.subtitle")}
+          </p>
         </div>
         {hasPermission("roles.create") && permissions.length > 0 && (
           <RoleForm permissions={permissions} />

@@ -92,10 +92,12 @@ function Admin() {
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">
+          <h1 className="text-headline-small text-on-surface">
             {t("admin.title")}
           </h1>
-          <p className="text-muted-foreground">{t("admin.subtitle")}</p>
+          <p className="text-body-medium text-on-surface-variant">
+            {t("admin.subtitle")}
+          </p>
         </div>
         {hasPermission("users.create") && <AddUser />}
       </div>

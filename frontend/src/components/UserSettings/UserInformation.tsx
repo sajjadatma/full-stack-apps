@@ -87,9 +87,7 @@ const UserInformation = () => {
 
   return (
     <div className="max-w-md">
-      <h3 className="text-lg font-semibold py-4">
-        {t("settings.userInformation")}
-      </h3>
+      <h3 className="text-title-large py-4">{t("settings.userInformation")}</h3>
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit(onSubmit)}

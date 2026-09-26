@@ -64,6 +64,7 @@
     "morePages": "More pages"
   },
   "auth": {
+    "brandTagline": "A Material 3 inspired experience for the Full Stack FastAPI Template.",
     "loginTitle": "Login to your account",
     "loginButton": "Log In",
     "forgotPassword": "Forgot your password?",
@@ -83,7 +84,13 @@
   },
   "dashboard": {
     "greeting": "Hi, {{name}} 👋",
-    "welcomeBack": "Welcome back, nice to see you again!!!"
+    "welcomeBack": "Welcome back, nice to see you again!!!",
+    "accountTitle": "Your account",
+    "signedInAs": "Signed in as",
+    "quickLinksTitle": "Quick links",
+    "quickLinksSubtitle": "Jump back into your workspace",
+    "itemsCardDescription": "Create and manage your items",
+    "adminCardDescription": "Manage users and roles"
   },
   "items": {
     "title": "Items",

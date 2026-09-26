@@ -30,12 +30,12 @@ function Layout() {
   return (
     <SidebarProvider>
       <AppSidebar />
-      <SidebarInset>
-        <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-2 border-b bg-background px-4">
-          <SidebarTrigger className="-ms-1 text-muted-foreground" />
+      <SidebarInset className="bg-surface">
+        <header className="bg-surface/90 supports-[backdrop-filter]:bg-surface/80 sticky top-0 z-10 flex h-16 shrink-0 items-center gap-2 border-b border-outline-variant/50 px-4 backdrop-blur">
+          <SidebarTrigger className="-ms-1 text-on-surface-variant" />
           <Button
             variant="ghost"
-            className="ms-auto text-muted-foreground"
+            className="ms-auto"
             data-testid="logout-button"
             onClick={logout}
           >
@@ -43,7 +43,7 @@ function Layout() {
             {t("navigation.logOut")}
           </Button>
         </header>
-        <main className="flex-1 p-6 md:p-8">
+        <main className="flex-1 px-4 py-6 md:px-8 md:py-8">
           <div className="mx-auto max-w-7xl">
             <Outlet />
           </div>

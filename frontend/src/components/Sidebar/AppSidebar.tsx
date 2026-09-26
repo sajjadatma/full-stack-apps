@@ -1,4 +1,4 @@
-import { Briefcase, Home, ShieldCheck, Users } from "lucide-react"
+import { Briefcase, Home, Package, ShieldCheck, Users } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
 import { SidebarAppearance } from "@/components/Common/Appearance"
@@ -26,6 +26,13 @@ export function AppSidebar() {
   ]
 
   const items = [...baseItems]
+  if (hasPermission("products.read") || hasPermission("products.read_any")) {
+    items.push({
+      icon: Package,
+      title: t("navigation.products"),
+      path: "/products",
+    })
+  }
   if (hasPermission("users.read")) {
     items.push({ icon: Users, title: t("navigation.admin"), path: "/admin" })
   }

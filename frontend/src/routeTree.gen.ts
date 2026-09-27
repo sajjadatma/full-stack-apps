@@ -21,6 +21,7 @@ import { Route as LayoutItemsRouteImport } from './routes/_layout/items'
 import { Route as LayoutProductsRouteImport } from './routes/_layout/products'
 import { Route as LayoutRolesRouteImport } from './routes/_layout/roles'
 import { Route as LayoutSettingsRouteImport } from './routes/_layout/settings'
+import { Route as LayoutVisualizerRouteImport } from './routes/_layout/visualizer'
 
 const LayoutRoute = LayoutRouteImport.update({
   id: '/_layout',
@@ -81,6 +82,11 @@ const LayoutSettingsRoute = LayoutSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => LayoutRoute,
 } as any)
+const LayoutVisualizerRoute = LayoutVisualizerRouteImport.update({
+  id: '/visualizer',
+  path: '/visualizer',
+  getParentRoute: () => LayoutRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof LayoutIndexRoute
@@ -94,6 +100,7 @@ export interface FileRoutesByFullPath {
   '/products': typeof LayoutProductsRoute
   '/roles': typeof LayoutRolesRoute
   '/settings': typeof LayoutSettingsRoute
+  '/visualizer': typeof LayoutVisualizerRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
@@ -106,6 +113,7 @@ export interface FileRoutesByTo {
   '/products': typeof LayoutProductsRoute
   '/roles': typeof LayoutRolesRoute
   '/settings': typeof LayoutSettingsRoute
+  '/visualizer': typeof LayoutVisualizerRoute
   '/': typeof LayoutIndexRoute
 }
 export interface FileRoutesById {
@@ -121,6 +129,7 @@ export interface FileRoutesById {
   '/_layout/products': typeof LayoutProductsRoute
   '/_layout/roles': typeof LayoutRolesRoute
   '/_layout/settings': typeof LayoutSettingsRoute
+  '/_layout/visualizer': typeof LayoutVisualizerRoute
   '/_layout/': typeof LayoutIndexRoute
 }
 export interface FileRouteTypes {
@@ -137,6 +146,7 @@ export interface FileRouteTypes {
     | '/products'
     | '/roles'
     | '/settings'
+    | '/visualizer'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/login'
@@ -149,6 +159,7 @@ export interface FileRouteTypes {
     | '/products'
     | '/roles'
     | '/settings'
+    | '/visualizer'
     | '/'
   id:
     | '__root__'
@@ -163,6 +174,7 @@ export interface FileRouteTypes {
     | '/_layout/products'
     | '/_layout/roles'
     | '/_layout/settings'
+    | '/_layout/visualizer'
     | '/_layout/'
   fileRoutesById: FileRoutesById
 }
@@ -260,6 +272,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutSettingsRouteImport
       parentRoute: typeof LayoutRoute
     }
+    '/_layout/visualizer': {
+      id: '/_layout/visualizer'
+      path: '/visualizer'
+      fullPath: '/visualizer'
+      preLoaderRoute: typeof LayoutVisualizerRouteImport
+      parentRoute: typeof LayoutRoute
+    }
   }
 }
 
@@ -270,6 +289,7 @@ interface LayoutRouteChildren {
   LayoutProductsRoute: typeof LayoutProductsRoute
   LayoutRolesRoute: typeof LayoutRolesRoute
   LayoutSettingsRoute: typeof LayoutSettingsRoute
+  LayoutVisualizerRoute: typeof LayoutVisualizerRoute
   LayoutIndexRoute: typeof LayoutIndexRoute
 }
 
@@ -280,6 +300,7 @@ const LayoutRouteChildren: LayoutRouteChildren = {
   LayoutProductsRoute: LayoutProductsRoute,
   LayoutRolesRoute: LayoutRolesRoute,
   LayoutSettingsRoute: LayoutSettingsRoute,
+  LayoutVisualizerRoute: LayoutVisualizerRoute,
   LayoutIndexRoute: LayoutIndexRoute,
 }
 

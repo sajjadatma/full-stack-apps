@@ -260,6 +260,69 @@ def test_product_detail_update_and_delete_not_found(
     assert client.delete(url, headers=superuser_token_headers).status_code == 404
 
 
+def test_suitable_surface_filter_returns_only_eligible_products(
+    client: TestClient, superuser_token_headers: dict[str, str]
+) -> None:
+    category_id = _create_category(client, superuser_token_headers)
+    brand_id = _create_brand(client, superuser_token_headers)
+    floor_only = _product_payload(category_id, brand_id)
+    floor_only.update(suitable_surfaces=["FLOOR"])
+    wall_only = _product_payload(category_id, brand_id)
+    wall_only.update(suitable_surfaces=["WALL"])
+    both = _product_payload(category_id, brand_id)
+    both.update(suitable_surfaces=["WALL", "FLOOR"])
+    none = _product_payload(category_id, brand_id)
+    none.update(suitable_surfaces=[])
+    for payload in (floor_only, wall_only, both, none):
+        response = client.post(
+            f"{settings.API_V1_STR}/products/",
+            headers=superuser_token_headers,
+            json=payload,
+        )
+        assert response.status_code == 201, response.text
+
+    floor = client.get(
+        f"{settings.API_V1_STR}/products/",
+        headers=superuser_token_headers,
+        params={
+            "category_id": category_id,
+            "suitable_surface": "FLOOR",
+            "is_active": True,
+            "limit": 1,
+        },
+    )
+    wall = client.get(
+        f"{settings.API_V1_STR}/products/",
+        headers=superuser_token_headers,
+        params={"category_id": category_id, "suitable_surface": "WALL"},
+    )
+    combined = client.get(
+        f"{settings.API_V1_STR}/products/",
+        headers=superuser_token_headers,
+        params={
+            "category_id": category_id,
+            "suitable_surface": "FLOOR",
+            "q": wall_only["sku"],
+        },
+    )
+    invalid = client.get(
+        f"{settings.API_V1_STR}/products/",
+        headers=superuser_token_headers,
+        params={"suitable_surface": "CEILING"},
+    )
+
+    assert floor.status_code == 200, floor.text
+    assert floor.json()["count"] == 2
+    assert len(floor.json()["data"]) == 1
+    assert all("FLOOR" in row["suitable_surfaces"] for row in floor.json()["data"])
+    assert wall.status_code == 200
+    assert wall.json()["count"] == 2
+    assert all("WALL" in row["suitable_surfaces"] for row in wall.json()["data"])
+    assert combined.status_code == 200
+    assert combined.json()["count"] == 0
+    assert invalid.status_code == 422
+
+
 @pytest.mark.parametrize("method", ["patch", "delete"])
 def test_product_mutations_require_permissions(
     client: TestClient,

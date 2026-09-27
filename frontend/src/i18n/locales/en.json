@@ -49,6 +49,7 @@
     "dashboard": "Dashboard",
     "items": "Items",
     "products": "Products",
+    "visualizer": "Visualizer",
     "catalogReferences": "Catalog references",
     "admin": "Admin",
     "roles": "Roles",
@@ -424,6 +425,87 @@
     "notFoundDescription": "The page you are looking for was not found.",
     "errorDescription": "Something went wrong. Please try again."
   },
+  "visualizer": {
+    "title": "Room Visualizer",
+    "subtitle": "See a product in your own room in a few steps.",
+    "stepperLabel": "Visualizer progress",
+    "stepProgress": "Step {{current}} of {{total}}",
+    "steps": {
+      "upload": "Upload room photo",
+      "surface": "Choose surface",
+      "product": "Select product",
+      "review": "Review",
+      "generate": "Generate",
+      "result": "Result"
+    },
+    "upload": {
+      "title": "Upload a room photo",
+      "description": "Choose a clear photo of the room you want to visualize. JPEG, PNG, or WebP.",
+      "cta": "Select a room photo",
+      "hint": "JPEG, PNG, or WebP up to 10 MB",
+      "previewAlt": "Selected room photo preview",
+      "browse": "Choose photo",
+      "change": "Change photo",
+      "invalidType": "Please choose a JPEG, PNG, or WebP image.",
+      "tooLarge": "The image is larger than the 10 MB limit."
+    },
+    "surface": {
+      "title": "Choose the surface",
+      "description": "Pick which part of the room the product should cover.",
+      "options": {
+        "FLOOR": "Floor",
+        "WALL": "Wall"
+      },
+      "descriptions": {
+        "FLOOR": "Replace the floor with the selected product.",
+        "WALL": "Replace the walls with the selected product."
+      }
+    },
+    "product": {
+      "title": "Select a product",
+      "description": "Showing products suitable for the {{surface}}.",
+      "searchLabel": "Search products",
+      "searchPlaceholder": "Search by name or SKU",
+      "loadError": "Could not load products.",
+      "emptyTitle": "No suitable products",
+      "emptyDescription": "No published product is currently suitable for this surface.",
+      "color": "Color",
+      "noImage": "No primary image"
+    },
+    "review": {
+      "title": "Review your selection",
+      "description": "Check the room photo, surface, and product before generating.",
+      "room": "Room photo",
+      "roomAlt": "Room photo",
+      "roomFallback": "Room photo unavailable",
+      "surfaceLabel": "Surface",
+      "product": "Product",
+      "generate": "Generate preview"
+    },
+    "generate": {
+      "title": "Generating your preview",
+      "description": "This can take a moment while the AI edits your room photo.",
+      "pending": "Queued…",
+      "processing": "Applying the product…",
+      "keepOpen": "You can keep this page open; the result will appear automatically.",
+      "loadError": "Could not load the generation status."
+    },
+    "result": {
+      "title": "Your preview is ready",
+      "description": "Compare the original room with the generated preview.",
+      "before": "Before",
+      "after": "After",
+      "beforeAlt": "Original room photo",
+      "afterAlt": "Generated room preview",
+      "productLabel": "Product",
+      "surfaceLabel": "Surface",
+      "download": "Download",
+      "startNew": "Start new visualization",
+      "retry": "Retry",
+      "failedTitle": "Generation failed",
+      "failedFallback": "The preview could not be generated. Please try again."
+    }
+  },
   "meta": {
     "login": "Log In - FastAPI Template",
     "signup": "Sign Up - FastAPI Template",
@@ -432,6 +514,7 @@
     "dashboard": "Dashboard - FastAPI Template",
     "items": "Items - FastAPI Template",
     "products": "Products - FastAPI Template",
+    "visualizer": "Visualizer - FastAPI Template",
     "catalogReferences": "Catalog References - FastAPI Template",
     "admin": "Admin - FastAPI Template",
     "roles": "Roles - FastAPI Template",

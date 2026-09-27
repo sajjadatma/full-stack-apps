@@ -4,6 +4,7 @@ import {
   Home,
   Package,
   ShieldCheck,
+  Sparkles,
   Users,
 } from "lucide-react"
 import { useTranslation } from "react-i18next"
@@ -38,6 +39,17 @@ export function AppSidebar() {
       icon: Package,
       title: t("navigation.products"),
       path: "/products",
+    })
+  }
+  const canVisualize =
+    hasPermission("generations.create") &&
+    hasPermission("generations.read_own") &&
+    (hasPermission("products.read") || hasPermission("products.read_any"))
+  if (canVisualize) {
+    items.push({
+      icon: Sparkles,
+      title: t("navigation.visualizer"),
+      path: "/visualizer",
     })
   }
   const canReadReferences =

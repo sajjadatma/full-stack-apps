@@ -6,7 +6,9 @@ from typing import Annotated, Any, Literal, cast
 
 from fastapi import APIRouter, File, Form, HTTPException, Query, UploadFile
 from fastapi.responses import StreamingResponse
+from sqlalchemy import cast as sa_cast
 from sqlalchemy import or_
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
 from sqlmodel import col, delete, func, select
@@ -36,6 +38,7 @@ from app.models import (
     ProductPublic,
     ProductsPublic,
     ProductUpdate,
+    TargetSurface,
 )
 from app.services.storage import (
     StorageNamespace,
@@ -170,6 +173,7 @@ def read_products(
     stock_state: Literal["in_stock", "low_stock", "out_of_stock"] | None = None,
     is_active: bool | None = None,
     is_featured: bool | None = None,
+    suitable_surface: TargetSurface | None = None,
 ) -> ProductsPublic:
     read_all = _ensure_read_access(current_user)
     statement = select(Product).options(selectinload(cast(Any, Product.images)))
@@ -194,6 +198,12 @@ def read_products(
         if value is not None:
             statement = statement.where(column == value)
 
+    if suitable_surface is not None:
+        # Containment on the JSON-backed eligibility list, cast to JSONB for the
+        # configured PostgreSQL database. Applied before count and pagination.
+        statement = statement.where(
+            sa_cast(Product.suitable_surfaces, JSONB).contains([suitable_surface.value])
+        )
     if min_price is not None:
         statement = statement.where(Product.price >= min_price)
     if max_price is not None:

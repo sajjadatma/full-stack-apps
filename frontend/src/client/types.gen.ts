@@ -2530,6 +2530,10 @@ export type productsReadProductsData = {
          * Is Featured
          */
         is_featured?: boolean | null;
+        /**
+         * Suitable Surface
+         */
+        suitable_surface?: TargetSurface | null;
     };
     url: '/api/v1/products/';
 };

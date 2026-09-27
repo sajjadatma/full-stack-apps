@@ -96,3 +96,49 @@ def test_visualizer_domain_migration_applies_and_downgrades_on_sqlite() -> None:
         assert not {"visualization_project", "generation_job"}.intersection(remaining)
 
     engine.dispose()
+
+
+def test_generation_retry_migration_adds_nullable_self_reference() -> None:
+    migration_path = (
+        Path(__file__).parents[2]
+        / "app"
+        / "alembic"
+        / "versions"
+        / "tv_generation_retry_01.py"
+    )
+    spec = importlib.util.spec_from_file_location(
+        "tv_generation_retry_01", migration_path
+    )
+    assert spec is not None and spec.loader is not None
+    migration = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(migration)
+
+    engine = create_engine("sqlite://")
+    with engine.begin() as connection:
+        connection.exec_driver_sql(
+            "CREATE TABLE generation_job (id CHAR(32) PRIMARY KEY, retry_count INTEGER NOT NULL DEFAULT 0)"
+        )
+        connection.exec_driver_sql(
+            "INSERT INTO generation_job (id, retry_count) VALUES ('legacy', 0)"
+        )
+        migration_context = MigrationContext.configure(connection)
+        with Operations.context(migration_context):
+            migration.upgrade()
+
+        columns = {
+            column["name"]: column
+            for column in inspect(connection).get_columns("generation_job")
+        }
+        assert "retry_of_job_id" in columns
+        assert columns["retry_of_job_id"]["nullable"] is True
+        assert connection.exec_driver_sql(
+            "SELECT retry_of_job_id FROM generation_job WHERE id = 'legacy'"
+        ).one() == (None,)
+
+        with Operations.context(migration_context):
+            migration.downgrade()
+        assert "retry_of_job_id" not in {
+            column["name"]
+            for column in inspect(connection).get_columns("generation_job")
+        }
+    engine.dispose()

@@ -120,6 +120,78 @@ def create_generation(
     return response
 
 
+@router.post("/{job_id}/retry", response_model=GenerationJobPublic, status_code=202)
+def retry_generation(
+    *,
+    session: SessionDep,
+    current_user: CurrentUser,
+    background_tasks: BackgroundTasks,
+    job_id: uuid.UUID,
+) -> GenerationJobPublic:
+    ensure_permissions(current_user, GENERATIONS_CREATE, GENERATIONS_READ_OWN)
+    source = session.get(GenerationJob, job_id)
+    if source is None:
+        raise HTTPException(status_code=404, detail=t("generation_not_found"))
+    project = session.get(VisualizationProject, source.project_id)
+    if project is None or project.owner_id != current_user.id:
+        raise HTTPException(status_code=404, detail=t("generation_not_found"))
+    if source.status != GenerationStatus.FAILED:
+        raise HTTPException(status_code=409, detail=t("generation_retry_not_allowed"))
+
+    product = session.get(Product, source.selected_product_id)
+    if product is None or not product.is_active:
+        raise HTTPException(status_code=422, detail=t("generation_product_unavailable"))
+    surface = TargetSurface(source.target_surface)
+    if not product.suitable_surfaces or surface not in product.suitable_surfaces:
+        raise HTTPException(status_code=422, detail=t("generation_product_unsuitable"))
+    primary_images = session.exec(
+        select(ProductImage).where(
+            ProductImage.product_id == product.id,
+            ProductImage.is_primary.is_(True),
+        )
+    ).all()
+    if len(primary_images) != 1:
+        raise HTTPException(
+            status_code=422, detail=t("generation_primary_image_required")
+        )
+    product_image = primary_images[0]
+    storage = get_storage_service()
+    try:
+        validate_reference_image(storage=storage, product=product, image=product_image)
+        _validate_project_source(storage, project)
+    except GenerationProcessingError as error:
+        raise HTTPException(status_code=422, detail=error.safe_message) from None
+
+    prompt = _build_prompt(surface, product, product_image)
+    retry = GenerationJob(
+        project_id=source.project_id,
+        selected_product_id=source.selected_product_id,
+        target_surface=surface,
+        status=GenerationStatus.PENDING,
+        retry_count=source.retry_count + 1,
+        retry_of_job_id=source.id,
+        prompt_version=prompt.prompt_version,
+    )
+    session.add(retry)
+    try:
+        session.commit()
+        session.refresh(retry)
+    except Exception as error:
+        session.rollback()
+        logger.error(
+            "Could not persist retried generation source_job_id=%s exception_type=%s",
+            source.id,
+            type(error).__name__,
+        )
+        raise HTTPException(
+            status_code=500, detail=t("generation_retry_create_failed")
+        ) from None
+
+    response = _job_public(retry)
+    background_tasks.add_task(process_generation_job, retry.id)
+    return response
+
+
 @router.get("/", response_model=GenerationJobsPublic)
 def read_generations(
     *,

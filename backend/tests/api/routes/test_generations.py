@@ -14,10 +14,15 @@ from app import crud
 from app.api.routes import generations, products, visualization_projects
 from app.core.config import settings
 from app.core.db import engine
+from app.core.rbac import GENERATIONS_CREATE, GENERATIONS_READ_OWN
 from app.models import (
     GenerationJob,
     GenerationStatus,
+    Permission,
+    Product,
+    ProductImage,
     Role,
+    User,
     UserCreate,
 )
 from app.services import generation_processor
@@ -751,3 +756,276 @@ def test_result_endpoint_requires_authentication(
     )
 
     assert result.status_code == 401
+
+
+def _create_failed_generation(
+    client: TestClient,
+    headers: dict[str, str],
+    project_id: str,
+    product_id: str,
+    monkeypatch: pytest.MonkeyPatch,
+) -> tuple[Any, FakeImageEditProvider]:
+    failed_provider = FakeImageEditProvider(
+        error=ImageEditProviderError(
+            ImageEditErrorCategory.PROVIDER_TIMEOUT,
+            "safe provider timeout",
+        )
+    )
+    _fake_provider(monkeypatch, failed_provider)
+    response = _create_generation(client, headers, project_id, product_id)
+    assert response.status_code == 202
+    detail = client.get(
+        f"{settings.API_V1_STR}/generations/{response.json()['id']}",
+        headers=headers,
+    )
+    assert detail.json()["status"] == GenerationStatus.FAILED
+    return detail, failed_provider
+
+
+@pytest.mark.parametrize("retry_outcome", ["completed", "failed"])
+def test_failed_generation_retry_creates_linked_new_attempt(
+    client: TestClient,
+    normal_user_token_headers: dict[str, str],
+    superuser_token_headers: dict[str, str],
+    local_storage: StorageService,
+    monkeypatch: pytest.MonkeyPatch,
+    retry_outcome: str,
+) -> None:
+    project = _create_project(client, normal_user_token_headers)
+    product = _create_product(client, superuser_token_headers)
+    original_detail, _ = _create_failed_generation(
+        client,
+        normal_user_token_headers,
+        project["id"],
+        product["id"],
+        monkeypatch,
+    )
+    source = original_detail.json()
+    retry_provider = (
+        FakeImageEditProvider()
+        if retry_outcome == "completed"
+        else FakeImageEditProvider(
+            error=ImageEditProviderError(
+                ImageEditErrorCategory.PROVIDER_CONTENT_REJECTED,
+                "safe provider rejection",
+            )
+        )
+    )
+    _fake_provider(monkeypatch, retry_provider)
+
+    retry_response = client.post(
+        f"{settings.API_V1_STR}/generations/{source['id']}/retry",
+        headers=normal_user_token_headers,
+    )
+    original_after = client.get(
+        f"{settings.API_V1_STR}/generations/{source['id']}",
+        headers=normal_user_token_headers,
+    ).json()
+    retry_id = retry_response.json()["id"]
+    retry_after = client.get(
+        f"{settings.API_V1_STR}/generations/{retry_id}",
+        headers=normal_user_token_headers,
+    ).json()
+
+    assert retry_response.status_code == 202, retry_response.text
+    assert retry_response.json()["status"] == GenerationStatus.PENDING
+    assert retry_id != source["id"]
+    assert retry_after["retry_of_job_id"] == source["id"]
+    assert retry_after["retry_count"] == source["retry_count"] + 1
+    assert retry_after["project_id"] == source["project_id"]
+    assert retry_after["selected_product_id"] == source["selected_product_id"]
+    assert retry_after["target_surface"] == source["target_surface"]
+    assert retry_after["prompt_version"] == "tilevision-v1"
+    assert retry_after["status"] == (
+        GenerationStatus.COMPLETED
+        if retry_outcome == "completed"
+        else GenerationStatus.FAILED
+    )
+    assert retry_after["error_code"] == (
+        None if retry_outcome == "completed" else "content_rejected"
+    )
+    assert original_after == source
+    assert len(retry_provider.requests) == 1
+    assert "Preserve the original camera position" in "\n".join(
+        retry_provider.requests[0].instructions.constraints
+    )
+
+
+@pytest.mark.parametrize(
+    "status",
+    [
+        GenerationStatus.PENDING,
+        GenerationStatus.PROCESSING,
+        GenerationStatus.COMPLETED,
+    ],
+)
+def test_only_failed_generation_jobs_can_be_retried(
+    client: TestClient,
+    normal_user_token_headers: dict[str, str],
+    superuser_token_headers: dict[str, str],
+    db: Session,
+    local_storage: StorageService,
+    monkeypatch: pytest.MonkeyPatch,
+    status: GenerationStatus,
+) -> None:
+    project = _create_project(client, normal_user_token_headers)
+    product = _create_product(client, superuser_token_headers)
+    original_detail, _ = _create_failed_generation(
+        client,
+        normal_user_token_headers,
+        project["id"],
+        product["id"],
+        monkeypatch,
+    )
+    source_id = original_detail.json()["id"]
+    source = db.get(GenerationJob, source_id)
+    assert source is not None
+    source.status = status
+    db.add(source)
+    db.commit()
+
+    response = client.post(
+        f"{settings.API_V1_STR}/generations/{source_id}/retry",
+        headers=normal_user_token_headers,
+    )
+
+    assert response.status_code == 409
+
+
+def test_read_any_permission_does_not_allow_retrying_another_users_job(
+    client: TestClient,
+    normal_user_token_headers: dict[str, str],
+    superuser_token_headers: dict[str, str],
+    local_storage: StorageService,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    project = _create_project(client, normal_user_token_headers)
+    product = _create_product(client, superuser_token_headers)
+    source, _ = _create_failed_generation(
+        client,
+        normal_user_token_headers,
+        project["id"],
+        product["id"],
+        monkeypatch,
+    )
+
+    readable = client.get(
+        f"{settings.API_V1_STR}/generations/{source.json()['id']}",
+        headers=superuser_token_headers,
+    )
+    retry = client.post(
+        f"{settings.API_V1_STR}/generations/{source.json()['id']}/retry",
+        headers=superuser_token_headers,
+    )
+
+    assert readable.status_code == 200
+    assert retry.status_code == 404
+
+
+@pytest.mark.parametrize(
+    "eligibility_failure", ["inactive", "unsupported_surface", "no_primary_image"]
+)
+def test_retry_rechecks_product_eligibility_but_history_remains_readable(
+    client: TestClient,
+    normal_user_token_headers: dict[str, str],
+    superuser_token_headers: dict[str, str],
+    db: Session,
+    local_storage: StorageService,
+    monkeypatch: pytest.MonkeyPatch,
+    eligibility_failure: str,
+) -> None:
+    project = _create_project(client, normal_user_token_headers)
+    product = _create_product(client, superuser_token_headers)
+    source, _ = _create_failed_generation(
+        client,
+        normal_user_token_headers,
+        project["id"],
+        product["id"],
+        monkeypatch,
+    )
+    product_row = db.get(Product, product["id"])
+    assert product_row is not None
+    if eligibility_failure == "inactive":
+        product_row.is_active = False
+        db.add(product_row)
+    elif eligibility_failure == "unsupported_surface":
+        product_row.suitable_surfaces = []
+        db.add(product_row)
+    else:
+        primary_image = db.exec(
+            select(ProductImage).where(ProductImage.product_id == product["id"])
+        ).first()
+        assert primary_image is not None
+        primary_image.is_primary = False
+        db.add(primary_image)
+    db.commit()
+
+    history = client.get(
+        f"{settings.API_V1_STR}/generations/",
+        headers=normal_user_token_headers,
+    )
+    detail = client.get(
+        f"{settings.API_V1_STR}/generations/{source.json()['id']}",
+        headers=normal_user_token_headers,
+    )
+    retry = client.post(
+        f"{settings.API_V1_STR}/generations/{source.json()['id']}/retry",
+        headers=normal_user_token_headers,
+    )
+
+    assert history.status_code == detail.status_code == 200
+    assert source.json()["id"] in {job["id"] for job in history.json()["data"]}
+    assert detail.json()["status"] == GenerationStatus.FAILED
+    assert retry.status_code == 422
+
+
+@pytest.mark.parametrize(
+    "granted_permission", [GENERATIONS_CREATE, GENERATIONS_READ_OWN]
+)
+def test_retry_requires_both_create_and_read_own_permissions(
+    client: TestClient,
+    superuser_token_headers: dict[str, str],
+    db: Session,
+    local_storage: StorageService,
+    monkeypatch: pytest.MonkeyPatch,
+    granted_permission: str,
+) -> None:
+    user_headers = authentication_token_from_email(
+        client=client, email=random_email(), db=db
+    )
+    project = _create_project(client, user_headers)
+    product = _create_product(client, superuser_token_headers)
+    source, _ = _create_failed_generation(
+        client,
+        user_headers,
+        project["id"],
+        product["id"],
+        monkeypatch,
+    )
+    granted = db.exec(
+        select(Permission).where(Permission.code == granted_permission)
+    ).one()
+    role = Role(
+        name=f"Single generation permission {random_lower_string()}",
+        slug=f"single-generation-permission-{random_lower_string()}",
+        is_system=False,
+        permissions=[granted],
+    )
+    db.add(role)
+    db.commit()
+    db.refresh(role)
+    user_id = client.get(
+        f"{settings.API_V1_STR}/users/me", headers=user_headers
+    ).json()["id"]
+    owner = db.get(User, user_id)
+    assert owner is not None
+    owner.role_id = role.id
+    db.add(owner)
+    db.commit()
+
+    response = client.post(
+        f"{settings.API_V1_STR}/generations/{source.json()['id']}/retry",
+        headers=user_headers,
+    )
+
+    assert response.status_code == 403

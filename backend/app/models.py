@@ -672,6 +672,11 @@ class GenerationJob(GenerationJobBase, table=True):
         index=True,
         ondelete="RESTRICT",
     )
+    retry_of_job_id: uuid.UUID | None = Field(
+        default=None,
+        foreign_key="generation_job.id",
+        ondelete="SET NULL",
+    )
     project: VisualizationProject | None = Relationship(back_populates="jobs")
     selected_product: Product | None = Relationship()
 
@@ -690,6 +695,7 @@ class GenerationJobPublic(SQLModel):
     error_code: str | None = None
     error_message: str | None = None
     retry_count: int = 0
+    retry_of_job_id: uuid.UUID | None = None
     id: uuid.UUID
     project_id: uuid.UUID
     selected_product_id: uuid.UUID

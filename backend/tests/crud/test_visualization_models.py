@@ -156,6 +156,7 @@ def test_generation_job_exposes_required_columns() -> None:
         "error_code",
         "error_message",
         "retry_count",
+        "retry_of_job_id",
         "created_at",
         "updated_at",
         "started_at",
@@ -171,6 +172,27 @@ def test_generation_status_values_are_the_mvp_contract() -> None:
         "COMPLETED",
         "FAILED",
     }
+
+
+def test_generation_job_retry_lineage_is_optional_and_public() -> None:
+    source_id = uuid4()
+    original = GenerationJobPublic(
+        id=uuid4(),
+        project_id=uuid4(),
+        selected_product_id=uuid4(),
+        target_surface=TargetSurface.FLOOR,
+    )
+    retry = GenerationJobPublic(
+        id=uuid4(),
+        project_id=uuid4(),
+        selected_product_id=uuid4(),
+        target_surface=TargetSurface.FLOOR,
+        retry_of_job_id=source_id,
+        retry_count=1,
+    )
+
+    assert original.retry_of_job_id is None
+    assert retry.model_dump(mode="json")["retry_of_job_id"] == str(source_id)
     assert {surface.value for surface in TargetSurface} == {"FLOOR", "WALL"}
 
 

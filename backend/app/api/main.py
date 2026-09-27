@@ -10,6 +10,7 @@ from app.api.routes import (
     roles,
     users,
     utils,
+    visualization_projects,
 )
 from app.core.config import settings
 
@@ -23,6 +24,7 @@ api_router.include_router(categories.router)
 api_router.include_router(brands.router)
 api_router.include_router(products.router)
 api_router.include_router(products.image_router)
+api_router.include_router(visualization_projects.router)
 
 
 if settings.FASTAPI_ENV == "development":

@@ -144,14 +144,14 @@ def test_s3_backend_upload_delete_and_signed_private_access() -> None:
         bucket="tilevision-media", client=client, signed_url_ttl_seconds=240
     )
 
-    backend.save("room-photos/abc.png", _png_bytes(), "image/png")
-    url = backend.access_url("room-photos/abc.png", private=True)
-    backend.delete("room-photos/abc.png")
+    backend.save("rooms/abc.png", _png_bytes(), "image/png")
+    url = backend.access_url("rooms/abc.png", private=True)
+    backend.delete("rooms/abc.png")
 
     assert client.put_calls == [
         {
             "Bucket": "tilevision-media",
-            "Key": "room-photos/abc.png",
+            "Key": "rooms/abc.png",
             "Body": _png_bytes(),
             "ContentType": "image/png",
         }
@@ -160,7 +160,7 @@ def test_s3_backend_upload_delete_and_signed_private_access() -> None:
     assert client.presign_calls[0]["operation"] == "get_object"
     assert client.presign_calls[0]["expires_in"] == 240
     assert client.delete_calls == [
-        {"Bucket": "tilevision-media", "Key": "room-photos/abc.png"}
+        {"Bucket": "tilevision-media", "Key": "rooms/abc.png"}
     ]
 
 
@@ -170,7 +170,7 @@ def test_s3_private_url_expiration_cannot_exceed_configured_ttl() -> None:
         bucket="tilevision-media", client=client, signed_url_ttl_seconds=300
     )
 
-    backend.access_url("room-photos/private.png", private=True, expires_in=3600)
+    backend.access_url("rooms/private.png", private=True, expires_in=3600)
 
     assert client.presign_calls[0]["expires_in"] == 300
 
@@ -213,7 +213,7 @@ def test_storage_configuration_selects_mocked_s3_provider(
     assert backend.bucket == "tilevision-media"
     assert client_options["endpoint_url"] == "http://localhost:9000"
     assert client_options["config"].s3["addressing_style"] == "path"
-    assert backend.access_url("room-photos/private.png", private=True)
+    assert backend.access_url("rooms/private.png", private=True)
 
 
 def test_s3_backend_uses_public_object_url_without_signing() -> None:

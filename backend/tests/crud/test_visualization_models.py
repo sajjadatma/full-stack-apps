@@ -90,7 +90,7 @@ def _make_product(session: Session) -> Product:
 def _make_project(session: Session, user: User) -> VisualizationProject:
     project = VisualizationProject(
         owner_id=user.id,
-        source_image_key="room-photos/kitchen.jpg",
+        source_image_key="rooms/kitchen.jpg",
         source_image_content_type="image/jpeg",
         source_image_size_bytes=2048,
         source_image_width_px=1024,
@@ -321,7 +321,7 @@ def test_visualization_schemas_have_create_public_and_list_shapes() -> None:
     project = VisualizationProjectPublic(
         id=project_id,
         owner_id=owner_id,
-        source_image_key="room-photos/room.jpg",
+        source_image_key="rooms/room.jpg",
         source_image_content_type="image/jpeg",
         source_image_size_bytes=1024,
         source_image_width_px=640,
@@ -336,13 +336,13 @@ def test_visualization_schemas_have_create_public_and_list_shapes() -> None:
 
     assert (
         VisualizationProjectCreate(
-            source_image_key="room-photos/room.jpg",
+            source_image_key="rooms/room.jpg",
             source_image_content_type="image/jpeg",
             source_image_size_bytes=1024,
             source_image_width_px=640,
             source_image_height_px=480,
         ).source_image_key
-        == "room-photos/room.jpg"
+        == "rooms/room.jpg"
     )
     assert VisualizationProjectsPublic(data=[project], count=1).data[0].id == project_id
     assert (

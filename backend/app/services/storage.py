@@ -14,7 +14,7 @@ from app.core.config import Settings
 
 class StorageNamespace(StrEnum):
     PRODUCT_IMAGES = "product-images"
-    ROOM_PHOTOS = "room-photos"
+    ROOM_PHOTOS = "rooms"
     GENERATION_RESULTS = "generation-results"
 
 

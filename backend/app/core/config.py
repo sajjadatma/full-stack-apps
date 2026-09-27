@@ -1,11 +1,13 @@
 import warnings
 from pathlib import Path
-from typing import Literal, Self
+from typing import Any, Literal, Self
 
 from pydantic import (
     EmailStr,
+    Field,
     HttpUrl,
     PostgresDsn,
+    SecretStr,
     computed_field,
     field_validator,
     model_validator,
@@ -38,6 +40,12 @@ class Settings(BaseSettings):
     STORAGE_S3_SECRET_ACCESS_KEY: str | None = None
     STORAGE_S3_PUBLIC_BASE_URL: str | None = None
     STORAGE_S3_SIGNED_URL_TTL_SECONDS: int = 300
+
+    IMAGE_EDIT_PROVIDER: str = "openai"
+    OPENAI_API_KEY: SecretStr | None = None
+    OPENAI_IMAGE_MODEL: str = "gpt-image-1.5"
+    OPENAI_IMAGE_TIMEOUT_SECONDS: float = Field(default=180.0, gt=0)
+    OPENAI_IMAGE_PARAMETERS: dict[str, Any] = Field(default_factory=dict)
 
     PROJECT_NAME: str
     SENTRY_DSN: HttpUrl | None = None

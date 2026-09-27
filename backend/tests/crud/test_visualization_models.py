@@ -13,6 +13,7 @@ from app.models import (
     GenerationJobPublic,
     GenerationJobsPublic,
     GenerationJobUpdate,
+    GenerationRequest,
     GenerationStatus,
     Item,
     Product,
@@ -355,3 +356,11 @@ def test_visualization_schemas_have_create_public_and_list_shapes() -> None:
     )
     assert GenerationJobUpdate(status=GenerationStatus.COMPLETED).status == "COMPLETED"
     assert GenerationJobsPublic(data=[job], count=1).data[0].project_id == project_id
+    public_data = job.model_dump()
+    assert "output_image_key" not in public_data
+    request = GenerationRequest(
+        visualization_project_id=project_id,
+        selected_product_id=uuid4(),
+        target_surface=TargetSurface.FLOOR,
+    )
+    assert request.target_surface == TargetSurface.FLOOR

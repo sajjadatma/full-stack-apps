@@ -16,6 +16,29 @@ def get_datetime_utc() -> datetime:
 Locale = Annotated[str, StringConstraints(max_length=10, pattern="^(en|fa)$")]
 
 
+class TargetSurface(StrEnum):
+    FLOOR = "FLOOR"
+    WALL = "WALL"
+
+
+def _normalize_target_surfaces(value: object) -> object:
+    if not isinstance(value, (list, tuple)):
+        return value
+    surfaces: set[TargetSurface] = set()
+    for item in value:
+        try:
+            surfaces.add(
+                item if isinstance(item, TargetSurface) else TargetSurface(item)
+            )
+        except (TypeError, ValueError) as exc:
+            raise ValueError("suitable_surfaces must contain FLOOR or WALL") from exc
+    return [
+        surface
+        for surface in (TargetSurface.FLOOR, TargetSurface.WALL)
+        if surface in surfaces
+    ]
+
+
 # ---------------------------------------------------------------------------
 # Roles and permissions (RBAC)
 # ---------------------------------------------------------------------------
@@ -321,6 +344,7 @@ class ProductBase(SQLModel):
     finish: str | None = Field(default=None, max_length=64)
     usage_area: str | None = Field(default=None, max_length=64)
     color_family: str | None = Field(default=None, max_length=64)
+    suitable_surfaces: list[TargetSurface] = Field(default_factory=list)
     width_mm: int | None = Field(default=None, gt=0)
     height_mm: int | None = Field(default=None, gt=0)
     thickness_mm: int | None = Field(default=None, gt=0)
@@ -339,6 +363,11 @@ class ProductBase(SQLModel):
     is_active: bool = True
     is_featured: bool = False
 
+    @field_validator("suitable_surfaces", mode="before")
+    @classmethod
+    def _validate_suitable_surfaces(cls, value: object) -> object:
+        return _normalize_target_surfaces(value)
+
 
 class ProductCreate(ProductBase):
     pass
@@ -356,6 +385,7 @@ class ProductUpdate(SQLModel):
     finish: str | None = Field(default=None, max_length=64)
     usage_area: str | None = Field(default=None, max_length=64)
     color_family: str | None = Field(default=None, max_length=64)
+    suitable_surfaces: list[TargetSurface] | None = None
     width_mm: int | None = Field(default=None, gt=0)
     height_mm: int | None = Field(default=None, gt=0)
     thickness_mm: int | None = Field(default=None, gt=0)
@@ -373,6 +403,13 @@ class ProductUpdate(SQLModel):
     low_stock_threshold: int | None = Field(default=None, ge=0)
     is_active: bool | None = None
     is_featured: bool | None = None
+
+    @field_validator("suitable_surfaces", mode="before")
+    @classmethod
+    def _validate_suitable_surfaces(cls, value: object) -> object:
+        if value is None:
+            return None
+        return _normalize_target_surfaces(value)
 
 
 class Product(ProductBase, table=True):
@@ -392,6 +429,9 @@ class Product(ProductBase, table=True):
     )
     brand_id: uuid.UUID | None = Field(
         default=None, foreign_key="brand.id", index=True, ondelete="RESTRICT"
+    )
+    suitable_surfaces: list[TargetSurface] = Field(
+        default_factory=list, sa_type=JSON, nullable=False
     )
     category: Category | None = Relationship(back_populates="products")
     brand: Brand | None = Relationship(back_populates="products")
@@ -470,11 +510,6 @@ ProductPublic.model_rebuild()
 # ---------------------------------------------------------------------------
 # TileVision room visualizer (projects and generation jobs)
 # ---------------------------------------------------------------------------
-
-
-class TargetSurface(StrEnum):
-    FLOOR = "FLOOR"
-    WALL = "WALL"
 
 
 class GenerationStatus(StrEnum):
@@ -580,6 +615,12 @@ class GenerationJobCreate(SQLModel):
     prompt_version: str | None = Field(default=None, max_length=64)
 
 
+class GenerationRequest(SQLModel):
+    visualization_project_id: uuid.UUID
+    selected_product_id: uuid.UUID
+    target_surface: TargetSurface
+
+
 class GenerationJobUpdate(SQLModel):
     status: GenerationStatus | None = None
     provider: str | None = Field(default=None, max_length=64)
@@ -635,7 +676,20 @@ class GenerationJob(GenerationJobBase, table=True):
     selected_product: Product | None = Relationship()
 
 
-class GenerationJobPublic(GenerationJobBase):
+class GenerationJobPublic(SQLModel):
+    target_surface: str
+    status: str = GenerationStatus.PENDING.value
+    provider: str | None = None
+    provider_model: str | None = None
+    provider_params: dict[str, Any] | None = None
+    prompt_version: str | None = None
+    output_image_url: str | None = None
+    output_image_content_type: str | None = None
+    output_image_width_px: int | None = None
+    output_image_height_px: int | None = None
+    error_code: str | None = None
+    error_message: str | None = None
+    retry_count: int = 0
     id: uuid.UUID
     project_id: uuid.UUID
     selected_product_id: uuid.UUID

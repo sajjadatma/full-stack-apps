@@ -83,6 +83,12 @@ class ImageEditResult:
 class ImageEditProvider(Protocol):
     """Provider-neutral image editing port for application/domain code."""
 
+    @property
+    def provider_name(self) -> str: ...
+
+    @property
+    def model(self) -> str: ...
+
     def edit(self, request: ImageEditInput) -> ImageEditResult: ...
 
 

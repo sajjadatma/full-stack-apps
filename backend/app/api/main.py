@@ -3,6 +3,7 @@ from fastapi import APIRouter
 from app.api.routes import (
     brands,
     categories,
+    generations,
     items,
     login,
     private,
@@ -25,6 +26,7 @@ api_router.include_router(brands.router)
 api_router.include_router(products.router)
 api_router.include_router(products.image_router)
 api_router.include_router(visualization_projects.router)
+api_router.include_router(generations.router)
 
 
 if settings.FASTAPI_ENV == "development":

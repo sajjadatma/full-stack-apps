@@ -41,6 +41,11 @@ PRODUCTS_UPDATE = "products.update"
 PRODUCTS_DELETE = "products.delete"
 PRODUCTS_MANAGE_IMAGES = "products.manage_images"
 
+# Generations
+GENERATIONS_CREATE = "generations.create"
+GENERATIONS_READ_OWN = "generations.read_own"
+GENERATIONS_READ_ANY = "generations.read_any"
+
 # Roles
 ROLES_READ = "roles.read"
 ROLES_CREATE = "roles.create"
@@ -83,6 +88,9 @@ PERMISSIONS: Final[tuple[PermissionInfo, ...]] = (
     PermissionInfo(PRODUCTS_UPDATE, "Update product catalog data"),
     PermissionInfo(PRODUCTS_DELETE, "Delete product catalog data"),
     PermissionInfo(PRODUCTS_MANAGE_IMAGES, "Manage product images"),
+    PermissionInfo(GENERATIONS_CREATE, "Create image generations"),
+    PermissionInfo(GENERATIONS_READ_OWN, "Read own image generations"),
+    PermissionInfo(GENERATIONS_READ_ANY, "Read any image generation"),
     PermissionInfo(ROLES_READ, "View roles and permissions"),
     PermissionInfo(ROLES_CREATE, "Create roles"),
     PermissionInfo(ROLES_UPDATE, "Update roles"),
@@ -119,6 +127,8 @@ DEFAULT_USER_PERMISSIONS: Final[frozenset[str]] = frozenset(
         ITEMS_UPDATE_OWN,
         ITEMS_DELETE_OWN,
         PRODUCTS_READ,
+        GENERATIONS_CREATE,
+        GENERATIONS_READ_OWN,
     }
 )
 

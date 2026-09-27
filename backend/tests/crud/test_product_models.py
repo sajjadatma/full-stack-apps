@@ -27,6 +27,7 @@ from app.models import (
     ProductPublic,
     ProductsPublic,
     ProductUpdate,
+    TargetSurface,
 )
 
 
@@ -110,6 +111,69 @@ def test_product_schema_exposes_requested_catalog_attributes() -> None:
     assert payload.model_dump(exclude_unset=True)["is_featured"] is True
 
 
+def test_suitable_surfaces_are_normalized_and_exposed_in_product_schemas() -> None:
+    payload = ProductCreate(
+        name="Carrara",
+        sku="CAR-60120",
+        slug="carrara",
+        category_id=uuid4(),
+        suitable_surfaces=[TargetSurface.WALL, TargetSurface.FLOOR, TargetSurface.WALL],
+    )
+    updated = ProductUpdate(
+        suitable_surfaces=["WALL", "FLOOR", "WALL"]  # type: ignore[list-item]
+    )
+    public = ProductPublic(
+        id=uuid4(),
+        name="Carrara",
+        sku="CAR-60120",
+        slug="carrara",
+        category_id=uuid4(),
+        stock_state="in_stock",
+        suitable_surfaces=[TargetSurface.WALL, TargetSurface.FLOOR],
+    )
+
+    assert payload.suitable_surfaces == [TargetSurface.FLOOR, TargetSurface.WALL]
+    assert updated.suitable_surfaces == [TargetSurface.FLOOR, TargetSurface.WALL]
+    assert public.model_dump(mode="json")["suitable_surfaces"] == ["FLOOR", "WALL"]
+
+
+def test_suitable_surfaces_have_independent_safe_default_and_validate_enum_values() -> (
+    None
+):
+    first = ProductCreate(
+        name="First",
+        sku="FIRST-1",
+        slug="first",
+        category_id=uuid4(),
+    )
+    second = ProductCreate(
+        name="Second",
+        sku="SECOND-1",
+        slug="second",
+        category_id=uuid4(),
+    )
+    first.suitable_surfaces.append(TargetSurface.FLOOR)
+
+    assert second.suitable_surfaces == []
+    assert ProductUpdate(suitable_surfaces=None).suitable_surfaces is None
+    with pytest.raises(ValidationError):
+        ProductCreate(
+            name="Invalid",
+            sku="INVALID-1",
+            slug="invalid",
+            category_id=uuid4(),
+            suitable_surfaces=["CEILING"],  # type: ignore[list-item]
+        )
+    with pytest.raises(ValidationError):
+        ProductCreate(
+            name="Null",
+            sku="NULL-1",
+            slug="null",
+            category_id=uuid4(),
+            suitable_surfaces=None,  # type: ignore[arg-type]
+        )
+
+
 def test_product_database_uses_numeric_price_coverage_and_weight_integer_stock() -> (
     None
 ):
@@ -119,6 +183,7 @@ def test_product_database_uses_numeric_price_coverage_and_weight_integer_stock()
     assert str(columns.sqm_per_box.type) == "NUMERIC(10, 3)"
     assert str(columns.kg_per_box.type) == "NUMERIC(10, 3)"
     assert str(columns.stock_quantity.type) == "INTEGER"
+    assert str(columns.suitable_surfaces.type) == "JSON"
 
 
 def test_product_sku_and_slug_are_unique(product_session: Session) -> None:

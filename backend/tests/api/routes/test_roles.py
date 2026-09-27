@@ -8,6 +8,9 @@ from app import crud
 from app.core.config import settings
 from app.core.rbac import (
     DEFAULT_USER_PERMISSIONS,
+    GENERATIONS_CREATE,
+    GENERATIONS_READ_ANY,
+    GENERATIONS_READ_OWN,
     ITEMS_READ_ANY,
     ROLES_ASSIGN,
     SUPERUSER_ROLE_SLUG,
@@ -42,6 +45,41 @@ def test_read_permissions_catalog(
     assert ITEMS_READ_ANY in codes
     assert ROLES_ASSIGN in codes
     assert len(codes) == len(set(codes))
+
+
+def test_generation_permissions_are_seeded_to_the_approved_system_roles(
+    client: TestClient,
+    normal_user_token_headers: dict[str, str],
+    superuser_token_headers: dict[str, str],
+) -> None:
+    catalog = client.get(
+        f"{settings.API_V1_STR}/roles/permissions",
+        headers=superuser_token_headers,
+    )
+    customer = client.get(
+        f"{settings.API_V1_STR}/users/me", headers=normal_user_token_headers
+    )
+    administrator = client.get(
+        f"{settings.API_V1_STR}/users/me", headers=superuser_token_headers
+    )
+
+    assert (
+        catalog.status_code == customer.status_code == administrator.status_code == 200
+    )
+    catalog_codes = {item["code"] for item in catalog.json()}
+    customer_permissions = set(customer.json()["permissions"])
+    admin_permissions = set(administrator.json()["permissions"])
+    assert {
+        GENERATIONS_CREATE,
+        GENERATIONS_READ_OWN,
+        GENERATIONS_READ_ANY,
+    } <= catalog_codes
+    assert {GENERATIONS_CREATE, GENERATIONS_READ_OWN} <= customer_permissions
+    assert {
+        GENERATIONS_CREATE,
+        GENERATIONS_READ_OWN,
+        GENERATIONS_READ_ANY,
+    } <= admin_permissions
 
 
 def test_read_roles(

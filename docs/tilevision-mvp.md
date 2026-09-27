@@ -2,10 +2,10 @@
 
 - **Document ID:** TV-MVP-000
 - **Title:** TileVision MVP Product Domain (source of truth)
-- **Version:** 1.1
+- **Version:** 1.2
 - **Status:** Approved — authoritative for all TileVision tasks (T01+)
 - **Owner:** Product
-- **Date:** 2026-09-26
+- **Date:** 2026-09-28
 - **Applies to:** `full-stack-fastapi-template` (branch `TileVision`)
 - **Supersedes:** none. This document is the single source of truth for the
   TileVision product domain. Where a later task and this document disagree,
@@ -328,14 +328,20 @@ PENDING ──► PROCESSING ──► COMPLETED
 
 - **PENDING**: record created; not yet sent to the provider.
 - **PROCESSING**: provider call in flight (the only long-running state).
-- **COMPLETED**: a result image exists and passed the preservation checks
-  (§6).
+- **COMPLETED**: provider execution succeeded; the non-empty output has a
+  supported image MIME type, matches the source room dimensions, is stored, and
+  the terminal job update was persisted. This status does **not** mean that
+  preservation outside the target surface was mechanically verified (§6.4).
 - **FAILED**: no usable result; `error_code` explains why.
 
 Transitions are one-way. A `GenerationJob` in `COMPLETED` or `FAILED` is
 terminal. Processing is asynchronous from the user's perspective: the UI
 observes progress (polling the generation job resource is acceptable for MVP)
 and the user may leave and return later.
+
+**MVP execution limitation:** generation currently uses process-local
+background tasks. A server restart can leave a job in `PENDING` or
+`PROCESSING`; durable queue/recovery is deferred.
 
 ### 5.4 Result presentation
 
@@ -412,10 +418,12 @@ the backend checks, and QA.
 
 ### 6.3 Fail-closed rule
 
-10. If the provider cannot identify the requested surface, cannot preserve the
-    room, or the result fails the checks in §6.4, the generation job **must
-    fail** with the appropriate `error_code`. Returning a degraded, altered, or
-    unchanged image as `COMPLETED` is prohibited.
+10. The preservation rules in §6.2 remain mandatory instructions to the image
+    provider. The MVP currently cannot mechanically determine whether the
+    provider preserved every non-target pixel. `COMPLETED` reflects successful
+    provider execution plus output format, dimension, storage, and terminal
+    persistence checks described in §5.3; it is not a preservation
+    verification result.
 11. A result that is effectively identical to the original is a failure
     (`no_change_detected`), not a success.
 12. The original room photo is never modified or overwritten; the result is a
@@ -423,18 +431,17 @@ the backend checks, and QA.
 
 ### 6.4 Verification of preservation
 
-- **Automated check (required when a mask is available).** Compare the result
-  to the original:
-  - outside the changed-surface region, the difference must stay below a
-    configured tolerance;
-  - inside the region, the difference must exceed a configured minimum (i.e.,
-    something was actually applied).
-  A generation job that violates either bound fails with
-  `preservation_failed` (or `no_change_detected`).
-- **Golden-example QA (required).** Human side-by-side review of the success,
-  edge, and failure examples in §5 and §4 confirms the rules above. Exact
-  tolerances and the mask source (provider-supplied vs computed locally) are
-  finalized by the implementing task; the rules themselves do not change.
+- **Mechanical preservation verification (deferred).** The current MVP has no
+  target-surface mask, segmentation, or preservation comparator. It therefore
+  cannot mechanically compare unchanged pixels outside the requested surface,
+  and a `COMPLETED` job must not claim that such a comparison passed. Add this
+  verification when masks/segmentation and a target-region comparator are
+  available. At that point, outside-region differences must remain below a
+  configured tolerance and target-region differences must exceed a configured
+  minimum; failures must use `preservation_failed` or `no_change_detected`.
+- **Golden-example QA (required for product quality).** Human side-by-side
+  review remains useful, but it is not represented as a backend verification
+  score or persisted as a preservation result in the MVP.
 
 ### 6.5 Auditability
 
@@ -458,7 +465,9 @@ so a result can be explained and reproduced where the provider allows it.
   comparison, and download.
 - **History:** owner-scoped list and detail of past generation jobs; delete own
   generation jobs; staff read-any for support.
-- **Preservation:** the §6 rules enforced with fail-closed behavior.
+- **Preservation:** T14 encodes the §6 rules in provider instructions; MVP
+  completion validates output format, dimensions, storage, and persisted state
+  but does not mechanically verify non-target pixels (§6.4).
 - **Authorization:** the roles and permission codes in §2.2, enforced by the
   backend.
 - **Localization:** all new UI in English and Farsi, with correct RTL layout.
@@ -548,9 +557,11 @@ Product images and room photos need persistent storage.
   available, a mask of the changed region.
 - The provider is selected **server-side** via configuration. No provider
   credentials or provider-specific fields ever reach the browser.
-- Bounded timeouts and retries; a timeout yields `provider_timeout`.
-- The provider choice and the mask source are open questions (§11); the
-  behavior in §5–§6 is not.
+- Bounded timeouts; a timeout yields `provider_timeout`. Retry API/behavior is
+  deferred.
+- Mechanical preservation verification is deferred because the current
+  provider interface supplies no target mask and no local comparator exists
+  (§6.4). The preservation instructions in §5–§6 remain mandatory.
 
 ---
 
@@ -591,9 +602,11 @@ Numbered and independently verifiable.
 - **AC-4 — Generation.** A customer can choose `FLOOR` or `WALL`, select a
   surface-suitable published product, and generate a preview. The result's
   dimensions and orientation equal the original's.
-- **AC-5 — Preservation.** On the golden examples, only the selected surface
-  changes; §6.2 holds; a result that cannot meet the rules fails closed rather
-  than shipping a degraded image.
+- **AC-5 — Preservation.** T14 instructions encode the §6.2 preservation rules
+  and the provider is expected to follow them. MVP `COMPLETED` status does not
+  mechanically certify preservation outside the target surface; mechanical
+  verification is deferred until target masks/segmentation and a comparator
+  are available. Invalid outputs still fail rather than completing.
 - **AC-6 — History.** A customer can list their generation jobs, reopen a past
   result (before/after), and delete their own generation jobs; another customer
   cannot see them.
@@ -622,8 +635,9 @@ implements the relevant area.
   and a decimal price with a `price_unit`; defaults are finalized later.
 - **A-5 → OQ-5 (limits/retention).** Assume configurable size/format/
   dimension limits, a per-user concurrency cap, and a daily generation cap.
-- **A-6 → OQ-6 (mask source).** Assume the provider may return a mask;
-  otherwise a local region estimate is used for §6.4.
+- **A-6 → OQ-6 (mask source).** Mechanical preservation verification is
+  deferred; selection of a provider-supplied mask or local segmentation is
+  unresolved and is not required for MVP completion.
 - **A-7 → OQ-7 (`staff` role).** Assume a new `staff` system role is added to
   the existing RBAC catalog; exact permission packaging is finalized there.
 
@@ -635,13 +649,19 @@ implements the relevant area.
 - **OQ-3** — Is the sample `Item` domain removed in favor of `Product`?
 - **OQ-4** — Default currency and price/stock units.
 - **OQ-5** — Concrete upload limits and generation rate caps.
-- **OQ-6** — Provider-supplied mask vs locally computed region for §6.4.
+- **OQ-6** — When mechanical preservation verification is implemented, should
+  its target mask be provider-supplied or computed locally?
 - **OQ-7** — Final permission codes and the definition of the `staff` role.
 
 ---
 
 ## 12. Change history
 
+- v1.2 (2026-09-28): Defines MVP `COMPLETED` semantics as provider success,
+  validated output format/dimensions, successful storage, and persisted
+  terminal state. Clarifies that mechanical preservation verification is
+  deferred because the current system has no mask/segmentation/comparator, and
+  documents process-local background-task restart limitations.
 - v1.1 (2026-09-27): Reconciled the visualizer domain with the T11 data model.
   The canonical entities are `VisualizationProject` (owner-scoped, stores the
   source room image) and `GenerationJob` (belongs to a project). Generation

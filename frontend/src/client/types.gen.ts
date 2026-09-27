@@ -49,6 +49,20 @@ export type Body_products_upload_product_image = {
 };
 
 /**
+ * Body_visualization-projects-create_visualization_project
+ */
+export type Body_visualization_projects_create_visualization_project = {
+    /**
+     * File
+     */
+    file: Blob | File;
+    /**
+     * Name
+     */
+    name?: string | null;
+};
+
+/**
  * BrandCreate
  */
 export type BrandCreate = {
@@ -222,6 +236,127 @@ export type CategoryUpdate = {
      * Is Active
      */
     is_active?: boolean | null;
+};
+
+/**
+ * GenerationJobPublic
+ */
+export type GenerationJobPublic = {
+    /**
+     * Target Surface
+     */
+    target_surface: string;
+    /**
+     * Status
+     */
+    status?: string;
+    /**
+     * Provider
+     */
+    provider?: string | null;
+    /**
+     * Provider Model
+     */
+    provider_model?: string | null;
+    /**
+     * Provider Params
+     */
+    provider_params?: {
+        [key: string]: unknown;
+    } | null;
+    /**
+     * Prompt Version
+     */
+    prompt_version?: string | null;
+    /**
+     * Output Image Url
+     */
+    output_image_url?: string | null;
+    /**
+     * Output Image Content Type
+     */
+    output_image_content_type?: string | null;
+    /**
+     * Output Image Width Px
+     */
+    output_image_width_px?: number | null;
+    /**
+     * Output Image Height Px
+     */
+    output_image_height_px?: number | null;
+    /**
+     * Error Code
+     */
+    error_code?: string | null;
+    /**
+     * Error Message
+     */
+    error_message?: string | null;
+    /**
+     * Retry Count
+     */
+    retry_count?: number;
+    /**
+     * Retry Of Job Id
+     */
+    retry_of_job_id?: string | null;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Project Id
+     */
+    project_id: string;
+    /**
+     * Selected Product Id
+     */
+    selected_product_id: string;
+    /**
+     * Created At
+     */
+    created_at?: string | null;
+    /**
+     * Updated At
+     */
+    updated_at?: string | null;
+    /**
+     * Started At
+     */
+    started_at?: string | null;
+    /**
+     * Completed At
+     */
+    completed_at?: string | null;
+};
+
+/**
+ * GenerationJobsPublic
+ */
+export type GenerationJobsPublic = {
+    /**
+     * Data
+     */
+    data: Array<GenerationJobPublic>;
+    /**
+     * Count
+     */
+    count: number;
+};
+
+/**
+ * GenerationRequest
+ */
+export type GenerationRequest = {
+    /**
+     * Visualization Project Id
+     */
+    visualization_project_id: string;
+    /**
+     * Selected Product Id
+     */
+    selected_product_id: string;
+    target_surface: TargetSurface;
 };
 
 /**
@@ -415,6 +550,10 @@ export type ProductCreate = {
      */
     color_family?: string | null;
     /**
+     * Suitable Surfaces
+     */
+    suitable_surfaces?: Array<TargetSurface>;
+    /**
      * Width Mm
      */
     width_mm?: number | null;
@@ -591,6 +730,10 @@ export type ProductPublic = {
      */
     color_family?: string | null;
     /**
+     * Suitable Surfaces
+     */
+    suitable_surfaces?: Array<TargetSurface>;
+    /**
      * Width Mm
      */
     width_mm?: number | null;
@@ -720,6 +863,10 @@ export type ProductUpdate = {
      * Color Family
      */
     color_family?: string | null;
+    /**
+     * Suitable Surfaces
+     */
+    suitable_surfaces?: Array<TargetSurface> | null;
     /**
      * Width Mm
      */
@@ -915,6 +1062,11 @@ export type RolesPublic = {
      */
     count: number;
 };
+
+/**
+ * TargetSurface
+ */
+export type TargetSurface = 'FLOOR' | 'WALL';
 
 /**
  * Token
@@ -1162,6 +1314,70 @@ export type ValidationError = {
     ctx?: {
         [key: string]: unknown;
     };
+};
+
+/**
+ * VisualizationProjectPublic
+ */
+export type VisualizationProjectPublic = {
+    /**
+     * Name
+     */
+    name?: string | null;
+    /**
+     * Source Image Key
+     */
+    source_image_key: string;
+    /**
+     * Source Image Content Type
+     */
+    source_image_content_type: string;
+    /**
+     * Source Image Size Bytes
+     */
+    source_image_size_bytes: number;
+    /**
+     * Source Image Width Px
+     */
+    source_image_width_px: number;
+    /**
+     * Source Image Height Px
+     */
+    source_image_height_px: number;
+    /**
+     * Source Image Url
+     */
+    source_image_url?: string | null;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Owner Id
+     */
+    owner_id: string;
+    /**
+     * Created At
+     */
+    created_at?: string | null;
+    /**
+     * Updated At
+     */
+    updated_at?: string | null;
+};
+
+/**
+ * VisualizationProjectsPublic
+ */
+export type VisualizationProjectsPublic = {
+    /**
+     * Data
+     */
+    data: Array<VisualizationProjectPublic>;
+    /**
+     * Count
+     */
+    count: number;
 };
 
 export type loginLoginAccessTokenData = {
@@ -2638,6 +2854,274 @@ export type productImagesReadProductImageContentResponses = {
 };
 
 export type productImagesReadProductImageContentResponse = productImagesReadProductImageContentResponses[keyof productImagesReadProductImageContentResponses];
+
+export type visualizationProjectsReadVisualizationProjectsData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Skip
+         */
+        skip?: number;
+        /**
+         * Limit
+         */
+        limit?: number;
+    };
+    url: '/api/v1/visualization-projects/';
+};
+
+export type visualizationProjectsReadVisualizationProjectsErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type visualizationProjectsReadVisualizationProjectsError = visualizationProjectsReadVisualizationProjectsErrors[keyof visualizationProjectsReadVisualizationProjectsErrors];
+
+export type visualizationProjectsReadVisualizationProjectsResponses = {
+    /**
+     * Successful Response
+     */
+    200: VisualizationProjectsPublic;
+};
+
+export type visualizationProjectsReadVisualizationProjectsResponse = visualizationProjectsReadVisualizationProjectsResponses[keyof visualizationProjectsReadVisualizationProjectsResponses];
+
+export type visualizationProjectsCreateVisualizationProjectData = {
+    body: Body_visualization_projects_create_visualization_project;
+    path?: never;
+    query?: never;
+    url: '/api/v1/visualization-projects/';
+};
+
+export type visualizationProjectsCreateVisualizationProjectErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type visualizationProjectsCreateVisualizationProjectError = visualizationProjectsCreateVisualizationProjectErrors[keyof visualizationProjectsCreateVisualizationProjectErrors];
+
+export type visualizationProjectsCreateVisualizationProjectResponses = {
+    /**
+     * Successful Response
+     */
+    201: VisualizationProjectPublic;
+};
+
+export type visualizationProjectsCreateVisualizationProjectResponse = visualizationProjectsCreateVisualizationProjectResponses[keyof visualizationProjectsCreateVisualizationProjectResponses];
+
+export type visualizationProjectsReadVisualizationProjectData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+    };
+    query?: never;
+    url: '/api/v1/visualization-projects/{project_id}';
+};
+
+export type visualizationProjectsReadVisualizationProjectErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type visualizationProjectsReadVisualizationProjectError = visualizationProjectsReadVisualizationProjectErrors[keyof visualizationProjectsReadVisualizationProjectErrors];
+
+export type visualizationProjectsReadVisualizationProjectResponses = {
+    /**
+     * Successful Response
+     */
+    200: VisualizationProjectPublic;
+};
+
+export type visualizationProjectsReadVisualizationProjectResponse = visualizationProjectsReadVisualizationProjectResponses[keyof visualizationProjectsReadVisualizationProjectResponses];
+
+export type visualizationProjectsReadVisualizationSourceImageData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+    };
+    query?: never;
+    url: '/api/v1/visualization-projects/{project_id}/source-image';
+};
+
+export type visualizationProjectsReadVisualizationSourceImageErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type visualizationProjectsReadVisualizationSourceImageError = visualizationProjectsReadVisualizationSourceImageErrors[keyof visualizationProjectsReadVisualizationSourceImageErrors];
+
+export type visualizationProjectsReadVisualizationSourceImageResponses = {
+    /**
+     * Successful Response
+     */
+    200: Blob | File;
+};
+
+export type visualizationProjectsReadVisualizationSourceImageResponse = visualizationProjectsReadVisualizationSourceImageResponses[keyof visualizationProjectsReadVisualizationSourceImageResponses];
+
+export type generationsReadGenerationsData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Skip
+         */
+        skip?: number;
+        /**
+         * Limit
+         */
+        limit?: number;
+    };
+    url: '/api/v1/generations/';
+};
+
+export type generationsReadGenerationsErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type generationsReadGenerationsError = generationsReadGenerationsErrors[keyof generationsReadGenerationsErrors];
+
+export type generationsReadGenerationsResponses = {
+    /**
+     * Successful Response
+     */
+    200: GenerationJobsPublic;
+};
+
+export type generationsReadGenerationsResponse = generationsReadGenerationsResponses[keyof generationsReadGenerationsResponses];
+
+export type generationsCreateGenerationData = {
+    body: GenerationRequest;
+    path?: never;
+    query?: never;
+    url: '/api/v1/generations/';
+};
+
+export type generationsCreateGenerationErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type generationsCreateGenerationError = generationsCreateGenerationErrors[keyof generationsCreateGenerationErrors];
+
+export type generationsCreateGenerationResponses = {
+    /**
+     * Successful Response
+     */
+    202: GenerationJobPublic;
+};
+
+export type generationsCreateGenerationResponse = generationsCreateGenerationResponses[keyof generationsCreateGenerationResponses];
+
+export type generationsRetryGenerationData = {
+    body?: never;
+    path: {
+        /**
+         * Job Id
+         */
+        job_id: string;
+    };
+    query?: never;
+    url: '/api/v1/generations/{job_id}/retry';
+};
+
+export type generationsRetryGenerationErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type generationsRetryGenerationError = generationsRetryGenerationErrors[keyof generationsRetryGenerationErrors];
+
+export type generationsRetryGenerationResponses = {
+    /**
+     * Successful Response
+     */
+    202: GenerationJobPublic;
+};
+
+export type generationsRetryGenerationResponse = generationsRetryGenerationResponses[keyof generationsRetryGenerationResponses];
+
+export type generationsReadGenerationData = {
+    body?: never;
+    path: {
+        /**
+         * Job Id
+         */
+        job_id: string;
+    };
+    query?: never;
+    url: '/api/v1/generations/{job_id}';
+};
+
+export type generationsReadGenerationErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type generationsReadGenerationError = generationsReadGenerationErrors[keyof generationsReadGenerationErrors];
+
+export type generationsReadGenerationResponses = {
+    /**
+     * Successful Response
+     */
+    200: GenerationJobPublic;
+};
+
+export type generationsReadGenerationResponse = generationsReadGenerationResponses[keyof generationsReadGenerationResponses];
+
+export type generationsReadGenerationResultData = {
+    body?: never;
+    path: {
+        /**
+         * Job Id
+         */
+        job_id: string;
+    };
+    query?: never;
+    url: '/api/v1/generations/{job_id}/result';
+};
+
+export type generationsReadGenerationResultErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type generationsReadGenerationResultError = generationsReadGenerationResultErrors[keyof generationsReadGenerationResultErrors];
+
+export type generationsReadGenerationResultResponses = {
+    /**
+     * Successful Response
+     */
+    200: Blob | File;
+};
+
+export type generationsReadGenerationResultResponse = generationsReadGenerationResultResponses[keyof generationsReadGenerationResultResponses];
 
 export type privateCreateUserData = {
     body: PrivateUserCreate;

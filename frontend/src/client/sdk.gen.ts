@@ -2,7 +2,7 @@
 
 import { type Client, formDataBodySerializer, type Options as Options2, type TDataShape, urlSearchParamsBodySerializer } from './client';
 import { client } from './client.gen';
-import type { brandsCreateBrandData, brandsCreateBrandErrors, brandsCreateBrandResponses, brandsDeleteBrandData, brandsDeleteBrandErrors, brandsDeleteBrandResponses, brandsReadBrandData, brandsReadBrandErrors, brandsReadBrandResponses, brandsReadBrandsData, brandsReadBrandsErrors, brandsReadBrandsResponses, brandsUpdateBrandData, brandsUpdateBrandErrors, brandsUpdateBrandResponses, categoriesCreateCategoryData, categoriesCreateCategoryErrors, categoriesCreateCategoryResponses, categoriesDeleteCategoryData, categoriesDeleteCategoryErrors, categoriesDeleteCategoryResponses, categoriesReadCategoriesData, categoriesReadCategoriesErrors, categoriesReadCategoriesResponses, categoriesReadCategoryData, categoriesReadCategoryErrors, categoriesReadCategoryResponses, categoriesUpdateCategoryData, categoriesUpdateCategoryErrors, categoriesUpdateCategoryResponses, itemsCreateItemData, itemsCreateItemErrors, itemsCreateItemResponses, itemsDeleteItemData, itemsDeleteItemErrors, itemsDeleteItemResponses, itemsReadItemData, itemsReadItemErrors, itemsReadItemResponses, itemsReadItemsData, itemsReadItemsErrors, itemsReadItemsResponses, itemsUpdateItemData, itemsUpdateItemErrors, itemsUpdateItemResponses, loginLoginAccessTokenData, loginLoginAccessTokenErrors, loginLoginAccessTokenResponses, loginRecoverPasswordData, loginRecoverPasswordErrors, loginRecoverPasswordHtmlContentData, loginRecoverPasswordHtmlContentErrors, loginRecoverPasswordHtmlContentResponses, loginRecoverPasswordResponses, loginResetPasswordData, loginResetPasswordErrors, loginResetPasswordResponses, loginTestTokenData, loginTestTokenResponses, privateCreateUserData, privateCreateUserErrors, privateCreateUserResponses, productImagesReadProductImageContentData, productImagesReadProductImageContentErrors, productImagesReadProductImageContentResponses, productsCreateProductData, productsCreateProductErrors, productsCreateProductResponses, productsDeactivateProductData, productsDeactivateProductErrors, productsDeactivateProductResponses, productsDeleteProductData, productsDeleteProductErrors, productsDeleteProductImageData, productsDeleteProductImageErrors, productsDeleteProductImageResponses, productsDeleteProductResponses, productsReadProductData, productsReadProductErrors, productsReadProductResponses, productsReadProductsData, productsReadProductsErrors, productsReadProductsResponses, productsReorderProductImagesData, productsReorderProductImagesErrors, productsReorderProductImagesResponses, productsSetPrimaryProductImageData, productsSetPrimaryProductImageErrors, productsSetPrimaryProductImageResponses, productsUpdateProductData, productsUpdateProductErrors, productsUpdateProductResponses, productsUploadProductImageData, productsUploadProductImageErrors, productsUploadProductImageResponses, rolesCreateRoleData, rolesCreateRoleErrors, rolesCreateRoleResponses, rolesDeleteRoleData, rolesDeleteRoleErrors, rolesDeleteRoleResponses, rolesReadPermissionsData, rolesReadPermissionsResponses, rolesReadRoleData, rolesReadRoleErrors, rolesReadRoleResponses, rolesReadRolesData, rolesReadRolesErrors, rolesReadRolesResponses, rolesUpdateRoleData, rolesUpdateRoleErrors, rolesUpdateRoleResponses, usersAssignUserRoleData, usersAssignUserRoleErrors, usersAssignUserRoleResponses, usersCreateUserData, usersCreateUserErrors, usersCreateUserResponses, usersDeleteUserData, usersDeleteUserErrors, usersDeleteUserMeData, usersDeleteUserMeResponses, usersDeleteUserResponses, usersReadUserByIdData, usersReadUserByIdErrors, usersReadUserByIdResponses, usersReadUserMeData, usersReadUserMeResponses, usersReadUsersData, usersReadUsersErrors, usersReadUsersResponses, usersRegisterUserData, usersRegisterUserErrors, usersRegisterUserResponses, usersUpdatePasswordMeData, usersUpdatePasswordMeErrors, usersUpdatePasswordMeResponses, usersUpdateUserData, usersUpdateUserErrors, usersUpdateUserMeData, usersUpdateUserMeErrors, usersUpdateUserMeResponses, usersUpdateUserResponses, utilsHealthCheckData, utilsHealthCheckResponses, utilsTestEmailData, utilsTestEmailErrors, utilsTestEmailResponses } from './types.gen';
+import type { brandsCreateBrandData, brandsCreateBrandErrors, brandsCreateBrandResponses, brandsDeleteBrandData, brandsDeleteBrandErrors, brandsDeleteBrandResponses, brandsReadBrandData, brandsReadBrandErrors, brandsReadBrandResponses, brandsReadBrandsData, brandsReadBrandsErrors, brandsReadBrandsResponses, brandsUpdateBrandData, brandsUpdateBrandErrors, brandsUpdateBrandResponses, categoriesCreateCategoryData, categoriesCreateCategoryErrors, categoriesCreateCategoryResponses, categoriesDeleteCategoryData, categoriesDeleteCategoryErrors, categoriesDeleteCategoryResponses, categoriesReadCategoriesData, categoriesReadCategoriesErrors, categoriesReadCategoriesResponses, categoriesReadCategoryData, categoriesReadCategoryErrors, categoriesReadCategoryResponses, categoriesUpdateCategoryData, categoriesUpdateCategoryErrors, categoriesUpdateCategoryResponses, generationsCreateGenerationData, generationsCreateGenerationErrors, generationsCreateGenerationResponses, generationsReadGenerationData, generationsReadGenerationErrors, generationsReadGenerationResponses, generationsReadGenerationResultData, generationsReadGenerationResultErrors, generationsReadGenerationResultResponses, generationsReadGenerationsData, generationsReadGenerationsErrors, generationsReadGenerationsResponses, generationsRetryGenerationData, generationsRetryGenerationErrors, generationsRetryGenerationResponses, itemsCreateItemData, itemsCreateItemErrors, itemsCreateItemResponses, itemsDeleteItemData, itemsDeleteItemErrors, itemsDeleteItemResponses, itemsReadItemData, itemsReadItemErrors, itemsReadItemResponses, itemsReadItemsData, itemsReadItemsErrors, itemsReadItemsResponses, itemsUpdateItemData, itemsUpdateItemErrors, itemsUpdateItemResponses, loginLoginAccessTokenData, loginLoginAccessTokenErrors, loginLoginAccessTokenResponses, loginRecoverPasswordData, loginRecoverPasswordErrors, loginRecoverPasswordHtmlContentData, loginRecoverPasswordHtmlContentErrors, loginRecoverPasswordHtmlContentResponses, loginRecoverPasswordResponses, loginResetPasswordData, loginResetPasswordErrors, loginResetPasswordResponses, loginTestTokenData, loginTestTokenResponses, privateCreateUserData, privateCreateUserErrors, privateCreateUserResponses, productImagesReadProductImageContentData, productImagesReadProductImageContentErrors, productImagesReadProductImageContentResponses, productsCreateProductData, productsCreateProductErrors, productsCreateProductResponses, productsDeactivateProductData, productsDeactivateProductErrors, productsDeactivateProductResponses, productsDeleteProductData, productsDeleteProductErrors, productsDeleteProductImageData, productsDeleteProductImageErrors, productsDeleteProductImageResponses, productsDeleteProductResponses, productsReadProductData, productsReadProductErrors, productsReadProductResponses, productsReadProductsData, productsReadProductsErrors, productsReadProductsResponses, productsReorderProductImagesData, productsReorderProductImagesErrors, productsReorderProductImagesResponses, productsSetPrimaryProductImageData, productsSetPrimaryProductImageErrors, productsSetPrimaryProductImageResponses, productsUpdateProductData, productsUpdateProductErrors, productsUpdateProductResponses, productsUploadProductImageData, productsUploadProductImageErrors, productsUploadProductImageResponses, rolesCreateRoleData, rolesCreateRoleErrors, rolesCreateRoleResponses, rolesDeleteRoleData, rolesDeleteRoleErrors, rolesDeleteRoleResponses, rolesReadPermissionsData, rolesReadPermissionsResponses, rolesReadRoleData, rolesReadRoleErrors, rolesReadRoleResponses, rolesReadRolesData, rolesReadRolesErrors, rolesReadRolesResponses, rolesUpdateRoleData, rolesUpdateRoleErrors, rolesUpdateRoleResponses, usersAssignUserRoleData, usersAssignUserRoleErrors, usersAssignUserRoleResponses, usersCreateUserData, usersCreateUserErrors, usersCreateUserResponses, usersDeleteUserData, usersDeleteUserErrors, usersDeleteUserMeData, usersDeleteUserMeResponses, usersDeleteUserResponses, usersReadUserByIdData, usersReadUserByIdErrors, usersReadUserByIdResponses, usersReadUserMeData, usersReadUserMeResponses, usersReadUsersData, usersReadUsersErrors, usersReadUsersResponses, usersRegisterUserData, usersRegisterUserErrors, usersRegisterUserResponses, usersUpdatePasswordMeData, usersUpdatePasswordMeErrors, usersUpdatePasswordMeResponses, usersUpdateUserData, usersUpdateUserErrors, usersUpdateUserMeData, usersUpdateUserMeErrors, usersUpdateUserMeResponses, usersUpdateUserResponses, utilsHealthCheckData, utilsHealthCheckResponses, utilsTestEmailData, utilsTestEmailErrors, utilsTestEmailResponses, visualizationProjectsCreateVisualizationProjectData, visualizationProjectsCreateVisualizationProjectErrors, visualizationProjectsCreateVisualizationProjectResponses, visualizationProjectsReadVisualizationProjectData, visualizationProjectsReadVisualizationProjectErrors, visualizationProjectsReadVisualizationProjectResponses, visualizationProjectsReadVisualizationProjectsData, visualizationProjectsReadVisualizationProjectsErrors, visualizationProjectsReadVisualizationProjectsResponses, visualizationProjectsReadVisualizationSourceImageData, visualizationProjectsReadVisualizationSourceImageErrors, visualizationProjectsReadVisualizationSourceImageResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -764,6 +764,127 @@ export class ProductImagesService {
             responseType: 'blob',
             security: [{ scheme: 'bearer', type: 'http' }],
             url: '/api/v1/product-images/{image_id}/content',
+            ...options
+        });
+    }
+}
+
+export class VisualizationProjectsService {
+    /**
+     * Read Visualization Projects
+     */
+    public static projectsReadVisualizationProjects<ThrowOnError extends boolean = true>(options?: Options<visualizationProjectsReadVisualizationProjectsData, ThrowOnError>) {
+        return (options?.client ?? client).get<visualizationProjectsReadVisualizationProjectsResponses, visualizationProjectsReadVisualizationProjectsErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/visualization-projects/',
+            ...options
+        });
+    }
+
+    /**
+     * Create Visualization Project
+     */
+    public static projectsCreateVisualizationProject<ThrowOnError extends boolean = true>(options: Options<visualizationProjectsCreateVisualizationProjectData, ThrowOnError>) {
+        return (options.client ?? client).post<visualizationProjectsCreateVisualizationProjectResponses, visualizationProjectsCreateVisualizationProjectErrors, ThrowOnError>({
+            ...formDataBodySerializer,
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/visualization-projects/',
+            ...options,
+            headers: {
+                'Content-Type': null,
+                ...options.headers
+            }
+        });
+    }
+
+    /**
+     * Read Visualization Project
+     */
+    public static projectsReadVisualizationProject<ThrowOnError extends boolean = true>(options: Options<visualizationProjectsReadVisualizationProjectData, ThrowOnError>) {
+        return (options.client ?? client).get<visualizationProjectsReadVisualizationProjectResponses, visualizationProjectsReadVisualizationProjectErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/visualization-projects/{project_id}',
+            ...options
+        });
+    }
+
+    /**
+     * Read Visualization Source Image
+     */
+    public static projectsReadVisualizationSourceImage<ThrowOnError extends boolean = true>(options: Options<visualizationProjectsReadVisualizationSourceImageData, ThrowOnError>) {
+        return (options.client ?? client).get<visualizationProjectsReadVisualizationSourceImageResponses, visualizationProjectsReadVisualizationSourceImageErrors, ThrowOnError>({
+            responseType: 'blob',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/visualization-projects/{project_id}/source-image',
+            ...options
+        });
+    }
+}
+
+export class GenerationsService {
+    /**
+     * Read Generations
+     */
+    public static readGenerations<ThrowOnError extends boolean = true>(options?: Options<generationsReadGenerationsData, ThrowOnError>) {
+        return (options?.client ?? client).get<generationsReadGenerationsResponses, generationsReadGenerationsErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/generations/',
+            ...options
+        });
+    }
+
+    /**
+     * Create Generation
+     */
+    public static createGeneration<ThrowOnError extends boolean = true>(options: Options<generationsCreateGenerationData, ThrowOnError>) {
+        return (options.client ?? client).post<generationsCreateGenerationResponses, generationsCreateGenerationErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/generations/',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+
+    /**
+     * Retry Generation
+     */
+    public static retryGeneration<ThrowOnError extends boolean = true>(options: Options<generationsRetryGenerationData, ThrowOnError>) {
+        return (options.client ?? client).post<generationsRetryGenerationResponses, generationsRetryGenerationErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/generations/{job_id}/retry',
+            ...options
+        });
+    }
+
+    /**
+     * Read Generation
+     */
+    public static readGeneration<ThrowOnError extends boolean = true>(options: Options<generationsReadGenerationData, ThrowOnError>) {
+        return (options.client ?? client).get<generationsReadGenerationResponses, generationsReadGenerationErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/generations/{job_id}',
+            ...options
+        });
+    }
+
+    /**
+     * Read Generation Result
+     */
+    public static readGenerationResult<ThrowOnError extends boolean = true>(options: Options<generationsReadGenerationResultData, ThrowOnError>) {
+        return (options.client ?? client).get<generationsReadGenerationResultResponses, generationsReadGenerationResultErrors, ThrowOnError>({
+            responseType: 'blob',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/generations/{job_id}/result',
             ...options
         });
     }

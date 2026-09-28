@@ -300,6 +300,7 @@ export type GenerationJobPublic = {
      * Retry Of Job Id
      */
     retry_of_job_id?: string | null;
+    selected_product?: GenerationProductSummaryPublic | null;
     /**
      * Id
      */
@@ -342,6 +343,56 @@ export type GenerationJobsPublic = {
      * Count
      */
     count: number;
+};
+
+/**
+ * GenerationProductSummaryPublic
+ */
+export type GenerationProductSummaryPublic = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Sku
+     */
+    sku: string;
+    /**
+     * Width Mm
+     */
+    width_mm?: number | null;
+    /**
+     * Height Mm
+     */
+    height_mm?: number | null;
+    /**
+     * Thickness Mm
+     */
+    thickness_mm?: number | null;
+    /**
+     * Finish
+     */
+    finish?: string | null;
+    /**
+     * Material
+     */
+    material?: string | null;
+    /**
+     * Color Family
+     */
+    color_family?: string | null;
+    /**
+     * Is Active
+     */
+    is_active: boolean;
+    /**
+     * Primary Image Id
+     */
+    primary_image_id?: string | null;
 };
 
 /**
@@ -3096,6 +3147,36 @@ export type generationsReadGenerationResponses = {
 };
 
 export type generationsReadGenerationResponse = generationsReadGenerationResponses[keyof generationsReadGenerationResponses];
+
+export type generationsReadGenerationProductImageData = {
+    body?: never;
+    path: {
+        /**
+         * Job Id
+         */
+        job_id: string;
+    };
+    query?: never;
+    url: '/api/v1/generations/{job_id}/product-image';
+};
+
+export type generationsReadGenerationProductImageErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type generationsReadGenerationProductImageError = generationsReadGenerationProductImageErrors[keyof generationsReadGenerationProductImageErrors];
+
+export type generationsReadGenerationProductImageResponses = {
+    /**
+     * Successful Response
+     */
+    200: Blob | File;
+};
+
+export type generationsReadGenerationProductImageResponse = generationsReadGenerationProductImageResponses[keyof generationsReadGenerationProductImageResponses];
 
 export type generationsReadGenerationResultData = {
     body?: never;

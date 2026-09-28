@@ -7,6 +7,7 @@ import {
   ProductsService,
   VisualizationProjectsService,
 } from "@/client"
+import { ProductImageThumbnail } from "@/components/Products/ProductImageThumbnail"
 import { Button } from "@/components/ui/button"
 import { LoadingButton } from "@/components/ui/loading-button"
 import { useObjectUrl } from "@/hooks/useObjectUrl"
@@ -181,11 +182,21 @@ export function ResultStep({
       </div>
 
       <dl className="grid gap-2 rounded-xl border border-outline-variant bg-surface-container-low p-4 text-body-medium sm:grid-cols-2">
-        <div className="flex gap-2">
-          <dt className="text-on-surface-variant">
-            {t("visualizer.result.productLabel")}
-          </dt>
-          <dd className="text-on-surface">{product?.name ?? t("common.na")}</dd>
+        <div className="flex items-center gap-3">
+          <ProductImageThumbnail
+            image={product?.images?.find((image) => image.is_primary)}
+            alt={product?.name ?? t("visualizer.result.productLabel")}
+            fallbackLabel={t("products.imagePlaceholder")}
+            className="size-16 shrink-0"
+          />
+          <div className="flex flex-col">
+            <dt className="text-on-surface-variant">
+              {t("visualizer.result.productLabel")}
+            </dt>
+            <dd className="text-on-surface">
+              {product?.name ?? t("common.na")}
+            </dd>
+          </div>
         </div>
         <div className="flex gap-2">
           <dt className="text-on-surface-variant">

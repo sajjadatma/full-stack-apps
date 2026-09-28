@@ -251,6 +251,9 @@ test("customer completes the visualizer flow to a generated result", async ({
   await expect(
     page.getByRole("img", { name: "Original room photo" }),
   ).toBeVisible()
+  const selectedProductImage = page.getByRole("img", { name: product.name })
+  await expect(selectedProductImage).toBeVisible()
+  await expect(selectedProductImage).toHaveAttribute("src", /^blob:/)
   await expect(page.getByRole("link", { name: "Download" })).toBeVisible()
   expect(mock.createdJobIds).toHaveLength(1)
 

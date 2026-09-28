@@ -50,6 +50,7 @@
     "items": "Items",
     "products": "Products",
     "visualizer": "Visualizer",
+    "generations": "Generation history",
     "catalogReferences": "Catalog references",
     "admin": "Admin",
     "roles": "Roles",
@@ -506,6 +507,35 @@
       "failedFallback": "The preview could not be generated. Please try again."
     }
   },
+  "generations": {
+    "title": "Generation history",
+    "description": "Review your previous room visualizations.",
+    "detailTitle": "Generation details",
+    "loading": "Loading generation history…",
+    "emptyTitle": "No visualizations yet",
+    "emptyDescription": "Completed and failed visualizations will appear here.",
+    "errorTitle": "Could not load history",
+    "errorDescription": "Please check your connection and try again.",
+    "detailErrorTitle": "Generation not available",
+    "detailErrorDescription": "This generation could not be found or you do not have access to it.",
+    "backToHistory": "Back to history",
+    "paginationLabel": "Generation history pages",
+    "previous": "Previous",
+    "next": "Next",
+    "page": "Page {{current}} of {{total}}",
+    "noOutput": "No generated image",
+    "imageUnavailable": "Image unavailable",
+    "dimensions": "Dimensions",
+    "productFinish": "Finish",
+    "productMaterial": "Material",
+    "productColor": "Color family",
+    "status": {
+      "PENDING": "Queued",
+      "PROCESSING": "Processing",
+      "COMPLETED": "Completed",
+      "FAILED": "Failed"
+    }
+  },
   "meta": {
     "login": "Log In - FastAPI Template",
     "signup": "Sign Up - FastAPI Template",
@@ -515,6 +545,8 @@
     "items": "Items - FastAPI Template",
     "products": "Products - FastAPI Template",
     "visualizer": "Visualizer - FastAPI Template",
+    "generations": "Generation history - FastAPI Template",
+    "generationDetail": "Generation details - FastAPI Template",
     "catalogReferences": "Catalog References - FastAPI Template",
     "admin": "Admin - FastAPI Template",
     "roles": "Roles - FastAPI Template",

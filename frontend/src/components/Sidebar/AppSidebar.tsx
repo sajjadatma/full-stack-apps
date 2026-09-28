@@ -1,6 +1,7 @@
 import {
   Briefcase,
   FolderTree,
+  History,
   Home,
   Package,
   ShieldCheck,
@@ -50,6 +51,13 @@ export function AppSidebar() {
       icon: Sparkles,
       title: t("navigation.visualizer"),
       path: "/visualizer",
+    })
+  }
+  if (hasPermission("generations.read_own")) {
+    items.push({
+      icon: History,
+      title: t("navigation.generations"),
+      path: "/generations",
     })
   }
   const canReadReferences =

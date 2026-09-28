@@ -17,11 +17,14 @@ import { Route as SignupRouteImport } from './routes/signup'
 import { Route as LayoutIndexRouteImport } from './routes/_layout/index'
 import { Route as LayoutAdminRouteImport } from './routes/_layout/admin'
 import { Route as LayoutCatalogReferencesRouteImport } from './routes/_layout/catalog-references'
+import { Route as LayoutGenerationsRouteImport } from './routes/_layout/generations'
 import { Route as LayoutItemsRouteImport } from './routes/_layout/items'
 import { Route as LayoutProductsRouteImport } from './routes/_layout/products'
 import { Route as LayoutRolesRouteImport } from './routes/_layout/roles'
 import { Route as LayoutSettingsRouteImport } from './routes/_layout/settings'
 import { Route as LayoutVisualizerRouteImport } from './routes/_layout/visualizer'
+import { Route as LayoutGenerationsIndexRouteImport } from './routes/_layout/generations.index'
+import { Route as LayoutGenerationsJobIdRouteImport } from './routes/_layout/generations.$jobId'
 
 const LayoutRoute = LayoutRouteImport.update({
   id: '/_layout',
@@ -62,6 +65,11 @@ const LayoutCatalogReferencesRoute = LayoutCatalogReferencesRouteImport.update({
   path: '/catalog-references',
   getParentRoute: () => LayoutRoute,
 } as any)
+const LayoutGenerationsRoute = LayoutGenerationsRouteImport.update({
+  id: '/generations',
+  path: '/generations',
+  getParentRoute: () => LayoutRoute,
+} as any)
 const LayoutItemsRoute = LayoutItemsRouteImport.update({
   id: '/items',
   path: '/items',
@@ -87,6 +95,16 @@ const LayoutVisualizerRoute = LayoutVisualizerRouteImport.update({
   path: '/visualizer',
   getParentRoute: () => LayoutRoute,
 } as any)
+const LayoutGenerationsIndexRoute = LayoutGenerationsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => LayoutGenerationsRoute,
+} as any)
+const LayoutGenerationsJobIdRoute = LayoutGenerationsJobIdRouteImport.update({
+  id: '/$jobId',
+  path: '/$jobId',
+  getParentRoute: () => LayoutGenerationsRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof LayoutIndexRoute
@@ -96,11 +114,14 @@ export interface FileRoutesByFullPath {
   '/signup': typeof SignupRoute
   '/admin': typeof LayoutAdminRoute
   '/catalog-references': typeof LayoutCatalogReferencesRoute
+  '/generations': typeof LayoutGenerationsRouteWithChildren
   '/items': typeof LayoutItemsRoute
   '/products': typeof LayoutProductsRoute
   '/roles': typeof LayoutRolesRoute
   '/settings': typeof LayoutSettingsRoute
   '/visualizer': typeof LayoutVisualizerRoute
+  '/generations/$jobId': typeof LayoutGenerationsJobIdRoute
+  '/generations/': typeof LayoutGenerationsIndexRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
@@ -115,6 +136,8 @@ export interface FileRoutesByTo {
   '/settings': typeof LayoutSettingsRoute
   '/visualizer': typeof LayoutVisualizerRoute
   '/': typeof LayoutIndexRoute
+  '/generations/$jobId': typeof LayoutGenerationsJobIdRoute
+  '/generations': typeof LayoutGenerationsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -125,12 +148,15 @@ export interface FileRoutesById {
   '/signup': typeof SignupRoute
   '/_layout/admin': typeof LayoutAdminRoute
   '/_layout/catalog-references': typeof LayoutCatalogReferencesRoute
+  '/_layout/generations': typeof LayoutGenerationsRouteWithChildren
   '/_layout/items': typeof LayoutItemsRoute
   '/_layout/products': typeof LayoutProductsRoute
   '/_layout/roles': typeof LayoutRolesRoute
   '/_layout/settings': typeof LayoutSettingsRoute
   '/_layout/visualizer': typeof LayoutVisualizerRoute
   '/_layout/': typeof LayoutIndexRoute
+  '/_layout/generations/$jobId': typeof LayoutGenerationsJobIdRoute
+  '/_layout/generations/': typeof LayoutGenerationsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -142,11 +168,14 @@ export interface FileRouteTypes {
     | '/signup'
     | '/admin'
     | '/catalog-references'
+    | '/generations'
     | '/items'
     | '/products'
     | '/roles'
     | '/settings'
     | '/visualizer'
+    | '/generations/$jobId'
+    | '/generations/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/login'
@@ -161,6 +190,8 @@ export interface FileRouteTypes {
     | '/settings'
     | '/visualizer'
     | '/'
+    | '/generations/$jobId'
+    | '/generations'
   id:
     | '__root__'
     | '/_layout'
@@ -170,12 +201,15 @@ export interface FileRouteTypes {
     | '/signup'
     | '/_layout/admin'
     | '/_layout/catalog-references'
+    | '/_layout/generations'
     | '/_layout/items'
     | '/_layout/products'
     | '/_layout/roles'
     | '/_layout/settings'
     | '/_layout/visualizer'
     | '/_layout/'
+    | '/_layout/generations/$jobId'
+    | '/_layout/generations/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -244,6 +278,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutCatalogReferencesRouteImport
       parentRoute: typeof LayoutRoute
     }
+    '/_layout/generations': {
+      id: '/_layout/generations'
+      path: '/generations'
+      fullPath: '/generations'
+      preLoaderRoute: typeof LayoutGenerationsRouteImport
+      parentRoute: typeof LayoutRoute
+    }
     '/_layout/items': {
       id: '/_layout/items'
       path: '/items'
@@ -279,12 +320,40 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutVisualizerRouteImport
       parentRoute: typeof LayoutRoute
     }
+    '/_layout/generations/': {
+      id: '/_layout/generations/'
+      path: '/'
+      fullPath: '/generations/'
+      preLoaderRoute: typeof LayoutGenerationsIndexRouteImport
+      parentRoute: typeof LayoutGenerationsRoute
+    }
+    '/_layout/generations/$jobId': {
+      id: '/_layout/generations/$jobId'
+      path: '/$jobId'
+      fullPath: '/generations/$jobId'
+      preLoaderRoute: typeof LayoutGenerationsJobIdRouteImport
+      parentRoute: typeof LayoutGenerationsRoute
+    }
   }
 }
+
+interface LayoutGenerationsRouteChildren {
+  LayoutGenerationsJobIdRoute: typeof LayoutGenerationsJobIdRoute
+  LayoutGenerationsIndexRoute: typeof LayoutGenerationsIndexRoute
+}
+
+const LayoutGenerationsRouteChildren: LayoutGenerationsRouteChildren = {
+  LayoutGenerationsJobIdRoute: LayoutGenerationsJobIdRoute,
+  LayoutGenerationsIndexRoute: LayoutGenerationsIndexRoute,
+}
+
+const LayoutGenerationsRouteWithChildren =
+  LayoutGenerationsRoute._addFileChildren(LayoutGenerationsRouteChildren)
 
 interface LayoutRouteChildren {
   LayoutAdminRoute: typeof LayoutAdminRoute
   LayoutCatalogReferencesRoute: typeof LayoutCatalogReferencesRoute
+  LayoutGenerationsRoute: typeof LayoutGenerationsRouteWithChildren
   LayoutItemsRoute: typeof LayoutItemsRoute
   LayoutProductsRoute: typeof LayoutProductsRoute
   LayoutRolesRoute: typeof LayoutRolesRoute
@@ -296,6 +365,7 @@ interface LayoutRouteChildren {
 const LayoutRouteChildren: LayoutRouteChildren = {
   LayoutAdminRoute: LayoutAdminRoute,
   LayoutCatalogReferencesRoute: LayoutCatalogReferencesRoute,
+  LayoutGenerationsRoute: LayoutGenerationsRouteWithChildren,
   LayoutItemsRoute: LayoutItemsRoute,
   LayoutProductsRoute: LayoutProductsRoute,
   LayoutRolesRoute: LayoutRolesRoute,

@@ -50,6 +50,7 @@
     "items": "آیتم‌ها",
     "products": "محصولات",
     "visualizer": "تصویرساز",
+    "generations": "تاریخچه تصویرسازی",
     "catalogReferences": "اطلاعات مرجع کاتالوگ",
     "admin": "مدیریت",
     "roles": "نقش‌ها",
@@ -506,6 +507,35 @@
       "failedFallback": "تولید پیش‌نمایش ممکن نشد. لطفاً دوباره تلاش کنید."
     }
   },
+  "generations": {
+    "title": "تاریخچه تصویرسازی",
+    "description": "تصویرسازی‌های قبلی اتاق خود را مرور کنید.",
+    "detailTitle": "جزئیات تصویرسازی",
+    "loading": "در حال بارگذاری تاریخچه…",
+    "emptyTitle": "هنوز تصویرسازی‌ای ندارید",
+    "emptyDescription": "تصویرسازی‌های موفق و ناموفق شما اینجا نمایش داده می‌شوند.",
+    "errorTitle": "بارگذاری تاریخچه ممکن نشد",
+    "errorDescription": "اتصال را بررسی کنید و دوباره تلاش کنید.",
+    "detailErrorTitle": "تصویرسازی در دسترس نیست",
+    "detailErrorDescription": "تصویرسازی پیدا نشد یا اجازه دسترسی به آن را ندارید.",
+    "backToHistory": "بازگشت به تاریخچه",
+    "paginationLabel": "صفحه‌های تاریخچه تصویرسازی",
+    "previous": "قبلی",
+    "next": "بعدی",
+    "page": "صفحه {{current}} از {{total}}",
+    "noOutput": "تصویر تولیدشده‌ای نیست",
+    "imageUnavailable": "تصویر در دسترس نیست",
+    "dimensions": "ابعاد",
+    "productFinish": "پرداخت",
+    "productMaterial": "جنس",
+    "productColor": "گروه رنگ",
+    "status": {
+      "PENDING": "در صف",
+      "PROCESSING": "در حال پردازش",
+      "COMPLETED": "کامل‌شده",
+      "FAILED": "ناموفق"
+    }
+  },
   "meta": {
     "login": "ورود - قالب FastAPI",
     "signup": "ثبت‌نام - قالب FastAPI",
@@ -515,6 +545,8 @@
     "items": "آیتم‌ها - قالب FastAPI",
     "products": "محصولات - قالب FastAPI",
     "visualizer": "تصویرساز - قالب FastAPI",
+    "generations": "تاریخچه تصویرسازی - قالب FastAPI",
+    "generationDetail": "جزئیات تصویرسازی - قالب FastAPI",
     "catalogReferences": "اطلاعات مرجع - قالب FastAPI",
     "admin": "مدیریت - قالب FastAPI",
     "roles": "نقش‌ها - قالب FastAPI",

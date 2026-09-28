@@ -26,6 +26,14 @@ async function mockGenerations(
   const createdJobIds: string[] = []
   const retriedJobIds: string[] = []
   const statusByJob = new Map<string, number>()
+  const generationParams = new Map<
+    string,
+    {
+      visualization_project_id?: string
+      selected_product_id?: string
+      target_surface?: string
+    }
+  >()
   const firstJobId = randomUUID()
   const retryJobId = randomUUID()
 
@@ -56,6 +64,19 @@ async function mockGenerations(
     error_message: status === "FAILED" ? "The provider failed safely." : null,
     retry_count: 0,
     retry_of_job_id: null,
+    selected_product: {
+      id: body?.selected_product_id ?? randomUUID(),
+      name: "History product",
+      sku: "HISTORY-1",
+      width_mm: 300,
+      height_mm: 300,
+      thickness_mm: null,
+      finish: "matte",
+      material: "porcelain",
+      color_family: "grey",
+      is_active: true,
+      primary_image_id: randomUUID(),
+    },
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
     started_at: null,
@@ -75,6 +96,7 @@ async function mockGenerations(
         selected_product_id?: string
         target_surface?: string
       }
+      generationParams.set(id, body)
       await route.fulfill({
         status: 202,
         contentType: "application/json",
@@ -85,6 +107,8 @@ async function mockGenerations(
 
     if (method === "POST" && path.endsWith("/retry")) {
       retriedJobIds.push(retryJobId)
+      const sourceId = path.split("/").at(-2) ?? firstJobId
+      generationParams.set(retryJobId, generationParams.get(sourceId) ?? {})
       await route.fulfill({
         status: 202,
         contentType: "application/json",
@@ -94,6 +118,15 @@ async function mockGenerations(
     }
 
     if (method === "GET" && path.endsWith("/result")) {
+      await route.fulfill({
+        status: 200,
+        contentType: "image/png",
+        body: PNG_BUFFER,
+      })
+      return
+    }
+
+    if (method === "GET" && path.endsWith("/product-image")) {
       await route.fulfill({
         status: 200,
         contentType: "image/png",
@@ -114,7 +147,9 @@ async function mockGenerations(
       await route.fulfill({
         status: 200,
         contentType: "application/json",
-        body: JSON.stringify(jobBody(jobId, status)),
+        body: JSON.stringify(
+          jobBody(jobId, status, generationParams.get(jobId)),
+        ),
       })
       return
     }
@@ -251,7 +286,9 @@ test("customer completes the visualizer flow to a generated result", async ({
   await expect(
     page.getByRole("img", { name: "Original room photo" }),
   ).toBeVisible()
-  const selectedProductImage = page.getByRole("img", { name: product.name })
+  const selectedProductImage = page.getByRole("img", {
+    name: "History product",
+  })
   await expect(selectedProductImage).toBeVisible()
   await expect(selectedProductImage).toHaveAttribute("src", /^blob:/)
   await expect(page.getByRole("link", { name: "Download" })).toBeVisible()

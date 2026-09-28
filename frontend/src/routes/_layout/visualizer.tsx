@@ -156,9 +156,6 @@ function VisualizerPage() {
   } else if (step === "result" && project && surface && product && job) {
     content = (
       <ResultStep
-        projectId={project}
-        productId={product}
-        surface={surface}
         jobId={job}
         isRetrying={retryMutation.isPending}
         onRetry={() => retryMutation.mutate(job)}

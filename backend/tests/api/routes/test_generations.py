@@ -7,6 +7,7 @@ from uuid import uuid4
 
 import pytest
 from fastapi.testclient import TestClient
+from sqlalchemy import event
 from sqlalchemy.exc import SQLAlchemyError
 from sqlmodel import Session, select
 
@@ -575,6 +576,199 @@ def test_owner_scoped_history_is_paginated_newest_first_and_support_can_read_any
     ordering = [(row["created_at"], row["id"]) for row in rows]
     assert ordering == sorted(ordering, reverse=True)
     assert denied.status_code == 404
+
+
+def test_generation_history_includes_inactive_product_without_catalog_access(
+    client: TestClient,
+    normal_user_token_headers: dict[str, str],
+    superuser_token_headers: dict[str, str],
+    db: Session,
+    local_storage: StorageService,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _fake_provider(monkeypatch, FakeImageEditProvider())
+    project = _create_project(client, normal_user_token_headers)
+    product = _create_product(client, superuser_token_headers)
+    created = _create_generation(
+        client, normal_user_token_headers, project["id"], product["id"]
+    )
+    assert created.status_code == 202, created.text
+    job_id = created.json()["id"]
+
+    product_row = db.get(Product, product["id"])
+    assert product_row is not None
+    product_row.is_active = False
+    product_row.width_mm = None
+    product_row.height_mm = None
+    db.add(product_row)
+    db.commit()
+
+    detail = client.get(
+        f"{settings.API_V1_STR}/generations/{job_id}",
+        headers=normal_user_token_headers,
+    )
+    history = client.get(
+        f"{settings.API_V1_STR}/generations/",
+        headers=normal_user_token_headers,
+    )
+    ordinary_product = client.get(
+        f"{settings.API_V1_STR}/products/{product['id']}",
+        headers=normal_user_token_headers,
+    )
+    ordinary_product_image = client.get(
+        f"{settings.API_V1_STR}/product-images/{product['primary_image']['id']}/content",
+        headers=normal_user_token_headers,
+    )
+
+    assert detail.status_code == history.status_code == 200
+    summary = detail.json()["selected_product"]
+    history_job = next(row for row in history.json()["data"] if row["id"] == job_id)
+    assert history_job["selected_product"] == summary
+    assert summary == {
+        "id": product["id"],
+        "name": product["name"],
+        "sku": product["sku"],
+        "width_mm": None,
+        "height_mm": None,
+        "thickness_mm": None,
+        "finish": "matte",
+        "material": "porcelain",
+        "color_family": None,
+        "is_active": False,
+        "primary_image_id": product["primary_image"]["id"],
+    }
+    assert ordinary_product.status_code == 404
+    assert ordinary_product_image.status_code == 404
+
+
+def test_generation_scoped_product_image_uses_generation_permissions(
+    client: TestClient,
+    normal_user_token_headers: dict[str, str],
+    superuser_token_headers: dict[str, str],
+    db: Session,
+    local_storage: StorageService,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _fake_provider(monkeypatch, FakeImageEditProvider())
+    own_project = _create_project(client, normal_user_token_headers)
+    foreign_project = _create_project(client, superuser_token_headers)
+    product = _create_product(client, superuser_token_headers)
+    own_job = _create_generation(
+        client, normal_user_token_headers, own_project["id"], product["id"]
+    )
+    foreign_job = _create_generation(
+        client, superuser_token_headers, foreign_project["id"], product["id"]
+    )
+    assert own_job.status_code == foreign_job.status_code == 202
+
+    product_row = db.get(Product, product["id"])
+    assert product_row is not None
+    product_row.is_active = False
+    db.add(product_row)
+    db.commit()
+
+    owner_image = client.get(
+        f"{settings.API_V1_STR}/generations/{own_job.json()['id']}/product-image",
+        headers=normal_user_token_headers,
+    )
+    privileged_image = client.get(
+        f"{settings.API_V1_STR}/generations/{own_job.json()['id']}/product-image",
+        headers=superuser_token_headers,
+    )
+    foreign_image = client.get(
+        f"{settings.API_V1_STR}/generations/{foreign_job.json()['id']}/product-image",
+        headers=normal_user_token_headers,
+    )
+
+    assert owner_image.status_code == privileged_image.status_code == 200
+    assert owner_image.headers["content-type"] == "image/png"
+    assert owner_image.content == privileged_image.content == _png_bytes()
+    assert foreign_image.status_code == 404
+
+
+@pytest.mark.parametrize("unavailable_image", ["no_primary", "missing_bytes"])
+def test_generation_scoped_product_image_returns_not_found_when_unavailable(
+    client: TestClient,
+    superuser_token_headers: dict[str, str],
+    db: Session,
+    local_storage: StorageService,
+    monkeypatch: pytest.MonkeyPatch,
+    unavailable_image: str,
+) -> None:
+    _fake_provider(monkeypatch, FakeImageEditProvider())
+    project = _create_project(client, superuser_token_headers)
+    product = _create_product(client, superuser_token_headers)
+    created = _create_generation(
+        client, superuser_token_headers, project["id"], product["id"]
+    )
+    assert created.status_code == 202, created.text
+
+    primary_image = db.get(ProductImage, product["primary_image"]["id"])
+    assert primary_image is not None
+    if unavailable_image == "no_primary":
+        primary_image.is_primary = False
+    else:
+        primary_image.storage_key = "product-images/no-such-image.png"
+    db.add(primary_image)
+    db.commit()
+
+    response = client.get(
+        f"{settings.API_V1_STR}/generations/{created.json()['id']}/product-image",
+        headers=superuser_token_headers,
+    )
+
+    assert response.status_code == 404
+
+
+def test_generation_history_product_loading_does_not_grow_per_job(
+    client: TestClient,
+    normal_user_token_headers: dict[str, str],
+    superuser_token_headers: dict[str, str],
+    local_storage: StorageService,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _fake_provider(monkeypatch, FakeImageEditProvider())
+    project = _create_project(client, normal_user_token_headers)
+    product = _create_product(client, superuser_token_headers)
+    for _ in range(5):
+        response = _create_generation(
+            client, normal_user_token_headers, project["id"], product["id"]
+        )
+        assert response.status_code == 202, response.text
+
+    def list_query_count(limit: int) -> tuple[int, dict[str, Any]]:
+        statements: list[str] = []
+
+        def record_query(
+            connection: Any,
+            cursor: Any,
+            statement: str,
+            parameters: Any,
+            context: Any,
+            executemany: bool,
+        ) -> None:
+            if statement.lstrip().lower().startswith("select"):
+                statements.append(statement)
+
+        event.listen(engine, "before_cursor_execute", record_query)
+        try:
+            response = client.get(
+                f"{settings.API_V1_STR}/generations/",
+                headers=normal_user_token_headers,
+                params={"skip": 0, "limit": limit},
+            )
+        finally:
+            event.remove(engine, "before_cursor_execute", record_query)
+        assert response.status_code == 200, response.text
+        return len(statements), response.json()
+
+    one_query_count, one_job_page = list_query_count(1)
+    five_query_count, five_job_page = list_query_count(5)
+
+    assert len(one_job_page["data"]) == 1
+    assert len(five_job_page["data"]) == 5
+    assert all(row.get("selected_product") for row in five_job_page["data"])
+    assert five_query_count == one_query_count
 
 
 def test_owner_and_read_any_can_read_job_and_stream_result(

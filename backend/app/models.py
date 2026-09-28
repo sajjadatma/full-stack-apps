@@ -681,6 +681,20 @@ class GenerationJob(GenerationJobBase, table=True):
     selected_product: Product | None = Relationship()
 
 
+class GenerationProductSummaryPublic(SQLModel):
+    id: uuid.UUID
+    name: str
+    sku: str
+    width_mm: int | None = None
+    height_mm: int | None = None
+    thickness_mm: int | None = None
+    finish: str | None = None
+    material: str | None = None
+    color_family: str | None = None
+    is_active: bool
+    primary_image_id: uuid.UUID | None = None
+
+
 class GenerationJobPublic(SQLModel):
     target_surface: str
     status: str = GenerationStatus.PENDING.value
@@ -696,6 +710,7 @@ class GenerationJobPublic(SQLModel):
     error_message: str | None = None
     retry_count: int = 0
     retry_of_job_id: uuid.UUID | None = None
+    selected_product: GenerationProductSummaryPublic | None = None
     id: uuid.UUID
     project_id: uuid.UUID
     selected_product_id: uuid.UUID

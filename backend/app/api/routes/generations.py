@@ -6,6 +6,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Query
 from fastapi.responses import StreamingResponse
+from sqlalchemy.orm import selectinload
 from sqlmodel import col, func, select
 
 from app.api.deps import CurrentUser, SessionDep, ensure_permissions
@@ -21,6 +22,7 @@ from app.models import (
     GenerationJob,
     GenerationJobPublic,
     GenerationJobsPublic,
+    GenerationProductSummaryPublic,
     GenerationRequest,
     GenerationStatus,
     Product,
@@ -212,6 +214,9 @@ def read_generations(
         select(GenerationJob)
         .join(VisualizationProject, owner_join)
         .where(VisualizationProject.owner_id == current_user.id)
+        .options(
+            selectinload(GenerationJob.selected_product).selectinload(Product.images)
+        )
         .order_by(
             col(GenerationJob.created_at).desc(),
             col(GenerationJob.id).desc(),
@@ -228,6 +233,50 @@ def read_generation(
 ) -> GenerationJobPublic:
     return _job_public(
         _readable_job(session=session, current_user=current_user, job_id=job_id)
+    )
+
+
+@router.get(
+    "/{job_id}/product-image",
+    response_class=StreamingResponse,
+    responses={
+        200: {
+            "content": {
+                "image/jpeg": {"schema": {"type": "string", "format": "binary"}},
+                "image/png": {"schema": {"type": "string", "format": "binary"}},
+                "image/webp": {"schema": {"type": "string", "format": "binary"}},
+            }
+        }
+    },
+)
+def read_generation_product_image(
+    *, session: SessionDep, current_user: CurrentUser, job_id: uuid.UUID
+) -> StreamingResponse:
+    job = _readable_job(session=session, current_user=current_user, job_id=job_id)
+    product = job.selected_product or session.get(Product, job.selected_product_id)
+    if product is None:
+        raise HTTPException(status_code=404, detail=t("product_image_not_found"))
+    primary_image = session.exec(
+        select(ProductImage).where(
+            ProductImage.product_id == product.id,
+            ProductImage.is_primary.is_(True),
+        )
+    ).first()
+    if primary_image is None:
+        raise HTTPException(status_code=404, detail=t("product_image_not_found"))
+    try:
+        content = get_storage_service().stream(primary_image.storage_key)
+    except FileNotFoundError:
+        raise HTTPException(
+            status_code=404, detail=t("product_image_not_found")
+        ) from None
+    return StreamingResponse(
+        content,
+        media_type=primary_image.content_type,
+        headers={
+            "Cache-Control": "private, no-store",
+            "X-Content-Type-Options": "nosniff",
+        },
     )
 
 
@@ -273,7 +322,13 @@ def _readable_job(
     can_read_any = has_permissions(current_user, GENERATIONS_READ_ANY)
     if not can_read_own and not can_read_any:
         raise HTTPException(status_code=403, detail=t("not_enough_permissions"))
-    job = session.get(GenerationJob, job_id)
+    job = session.exec(
+        select(GenerationJob)
+        .where(GenerationJob.id == job_id)
+        .options(
+            selectinload(GenerationJob.selected_product).selectinload(Product.images)
+        )
+    ).first()
     if job is None:
         raise HTTPException(status_code=404, detail=t("generation_not_found"))
     if not can_read_any:
@@ -289,8 +344,29 @@ def _job_public(job: GenerationJob) -> GenerationJobPublic:
         if job.status == GenerationStatus.COMPLETED and job.output_image_key
         else None
     )
+    product = job.selected_product
+    primary_image_id = None
+    selected_product = None
+    if product is not None:
+        primary_image_id = next(
+            (image.id for image in product.images if image.is_primary), None
+        )
+        selected_product = GenerationProductSummaryPublic(
+            id=product.id,
+            name=product.name,
+            sku=product.sku,
+            width_mm=product.width_mm,
+            height_mm=product.height_mm,
+            thickness_mm=product.thickness_mm,
+            finish=product.finish,
+            material=product.material,
+            color_family=product.color_family,
+            is_active=product.is_active,
+            primary_image_id=primary_image_id,
+        )
     return GenerationJobPublic.model_validate(
-        job, update={"output_image_url": output_url}
+        job,
+        update={"output_image_url": output_url, "selected_product": selected_product},
     )
 
 

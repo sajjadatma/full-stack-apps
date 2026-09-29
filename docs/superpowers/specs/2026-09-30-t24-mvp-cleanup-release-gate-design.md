@@ -3,7 +3,7 @@
 ## Status and intent
 
 - **Task:** T24 (depends on T23)
-- **Status:** Design approved in chat; awaiting spec review
+- **Status:** Design approved in chat; implementation plan awaiting review
 - **Product contract:** `docs/tilevision-mvp.md` v1.2, to be amended narrowly to
   v1.3 by this task
 - **Goal:** retire the unrelated template Item UI, close the Compose AI
@@ -63,13 +63,23 @@ Run and report each gate independently:
    command with the configured database and required services.
 3. Frontend Biome lint and production build/type validation.
 4. Full Playwright Chromium suite with database, backend, and Mailpit available;
-   explicitly confirm TileVision product, visualizer, history, and T23 journey
-   specs are included.
+   explicitly confirm the dashboard, product, visualizer, history, generation
+   result/retry coverage where represented by existing specs, and T23 MVP
+   journey specs are included. The full Chromium suite remains authoritative.
 5. Alembic consistency: inspect heads/history and run migrations against the
    test database; verify model metadata has no unapplied migration with
    `alembic check` where supported.
-6. Repository checks: `git diff --check`, no stale generated-client changes,
-   no secrets/debug logging, and no test-only production code.
+6. Bounded read-only security/release sanity audit:
+   - Confirm room/source-image and generated-result endpoints remain
+     authenticated and correctly owner/read-any scoped.
+   - Confirm generation-scoped product-image access remains authorized through
+     generation access, and no TileVision media endpoint is accidentally public.
+   - Check for obvious authorization inconsistencies between list, detail, and
+     media endpoints. This is a sanity review, not a security refactor or
+     penetration test.
+   - Confirm no committed API keys/secrets, temporary debug logging,
+     T24-related TODO/FIXME markers, or test-only production endpoints.
+7. Repository checks: `git diff --check` and no stale generated-client changes.
 
 If a new genuine production release blocker appears, stop before changing
 additional production behavior; report the evidence and smallest proposed fix

@@ -3,6 +3,7 @@ from uuid import uuid4
 
 import pytest
 from pydantic import ValidationError
+from sqlalchemy.dialects import postgresql
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session, SQLModel, create_engine
 
@@ -29,6 +30,21 @@ from app.models import (
     ProductUpdate,
     TargetSurface,
 )
+
+
+def test_product_image_metadata_declares_partial_primary_index() -> None:
+    index = next(
+        index
+        for index in ProductImage.__table__.indexes
+        if index.name == "uq_product_image_one_primary_per_product"
+    )
+
+    assert index.unique is True
+    assert [column.name for column in index.columns] == ["product_id"]
+    predicate = index.dialect_options["postgresql"]["where"]
+    assert (
+        predicate.compile(dialect=postgresql.dialect()).string == "is_primary IS TRUE"
+    )
 
 
 @pytest.fixture

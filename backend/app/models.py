@@ -5,7 +5,7 @@ from enum import StrEnum
 from typing import Annotated, Any
 
 from pydantic import EmailStr, StringConstraints, field_validator
-from sqlalchemy import JSON, DateTime, Index, Numeric
+from sqlalchemy import JSON, DateTime, Index, Numeric, text
 from sqlmodel import Field, Relationship, SQLModel
 
 
@@ -497,6 +497,15 @@ class ProductImageUpdate(SQLModel):
 
 class ProductImage(ProductImageBase, table=True):
     __tablename__ = "product_image"
+    __table_args__ = (
+        Index(
+            "uq_product_image_one_primary_per_product",
+            "product_id",
+            unique=True,
+            postgresql_where=text("is_primary IS TRUE"),
+            sqlite_where=text("is_primary IS TRUE"),
+        ),
+    )
 
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     created_at: datetime | None = Field(

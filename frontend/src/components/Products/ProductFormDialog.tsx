@@ -12,6 +12,7 @@ import {
   type ProductPublic,
   ProductsService,
   type ProductUpdate,
+  type TargetSurface,
 } from "@/client"
 import {
   allowedImageTypes,
@@ -45,6 +46,7 @@ type Draft = {
   finish: string
   usage_area: string
   color_family: string
+  suitable_surfaces: TargetSurface[]
   width_mm: string
   height_mm: string
   thickness_mm: string
@@ -74,6 +76,7 @@ const emptyDraft = (): Draft => ({
   finish: "",
   usage_area: "",
   color_family: "",
+  suitable_surfaces: [],
   width_mm: "",
   height_mm: "",
   thickness_mm: "",
@@ -105,6 +108,7 @@ function toDraft(product?: ProductPublic): Draft {
     finish: product.finish ?? "",
     usage_area: product.usage_area ?? "",
     color_family: product.color_family ?? "",
+    suitable_surfaces: [...(product.suitable_surfaces ?? [])],
     width_mm: product.width_mm?.toString() ?? "",
     height_mm: product.height_mm?.toString() ?? "",
     thickness_mm: product.thickness_mm?.toString() ?? "",
@@ -147,6 +151,7 @@ function payloadFromDraft(draft: Draft): ProductCreate {
     rectified: draft.rectified,
     is_active: draft.is_active,
     is_featured: draft.is_featured,
+    suitable_surfaces: [...draft.suitable_surfaces],
   }
   const optionalTextFields = [
     "description",
@@ -728,6 +733,39 @@ export function ProductFormDialog({
                   onChange={(v) => update("kg_per_box", v)}
                 />
               </div>
+              <fieldset
+                className="grid gap-2"
+                aria-describedby="product-suitable-surfaces-help"
+              >
+                <legend className="text-label-large text-on-surface">
+                  {t("products.suitableSurfaces")}
+                </legend>
+                <p
+                  id="product-suitable-surfaces-help"
+                  className="text-body-small text-on-surface-variant"
+                >
+                  {t("products.suitableSurfacesHelp")}
+                </p>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {(["FLOOR", "WALL"] as const).map((surface) => (
+                    <CheckField
+                      key={surface}
+                      label={t(`visualizer.surface.options.${surface}`)}
+                      checked={draft.suitable_surfaces.includes(surface)}
+                      onChange={(checked) =>
+                        update(
+                          "suitable_surfaces",
+                          checked
+                            ? [...draft.suitable_surfaces, surface]
+                            : draft.suitable_surfaces.filter(
+                                (value) => value !== surface,
+                              ),
+                        )
+                      }
+                    />
+                  ))}
+                </div>
+              </fieldset>
               <CheckField
                 label={t("products.rectified")}
                 checked={draft.rectified}

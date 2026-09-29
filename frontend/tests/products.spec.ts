@@ -93,6 +93,130 @@ test("staff can create, edit, search, and deactivate a product", async ({
   })
 })
 
+test("product suitable surfaces can be created, edited, and reopened", async ({
+  page,
+}) => {
+  const suffix = randomUUID().slice(0, 8)
+  const categoryName = `Surface Category ${suffix}`
+  const apiBase = process.env.VITE_API_URL || "http://localhost:8000"
+  await page.goto("/products")
+  const token = await page.evaluate(() => localStorage.getItem("access_token"))
+  expect(token).toBeTruthy()
+
+  const categoryResponse = await page.request.post(
+    `${apiBase}/api/v1/categories/`,
+    {
+      headers: { Authorization: `Bearer ${token}` },
+      data: { name: categoryName, slug: `surface-${suffix}` },
+    },
+  )
+  expect(categoryResponse.ok()).toBeTruthy()
+  const category = await categoryResponse.json()
+  await page.reload()
+
+  const createProduct = async (
+    name: string,
+    surfaceValues: { floor: boolean; wall: boolean },
+  ) => {
+    await page.getByRole("button", { name: "Add product" }).click()
+    const dialog = page.getByRole("dialog", { name: "Add product" })
+    await dialog.getByLabel("Product name").fill(name)
+    const identifier = name.toLowerCase().replaceAll(" ", "-")
+    await dialog.getByLabel("SKU").fill(`SUR-${identifier}`)
+    await dialog.getByLabel("Slug").fill(`surface-${identifier}`)
+    await dialog.getByLabel("Category").selectOption({ label: categoryName })
+
+    const floor = dialog.getByRole("checkbox", { name: "Floor" })
+    const wall = dialog.getByRole("checkbox", { name: "Wall" })
+    await expect(floor).not.toBeChecked()
+    await expect(wall).not.toBeChecked()
+    if (surfaceValues.floor) await floor.check()
+    if (surfaceValues.wall) await wall.check()
+
+    await dialog.getByRole("button", { name: "Save" }).click()
+    await expect(page.getByText("Product created successfully")).toBeVisible()
+    await expect(dialog).not.toBeVisible()
+    await page.getByRole("button", { name: "Close toast" }).last().click()
+  }
+
+  const openProduct = async (name: string) => {
+    const row = page
+      .getByTestId("products-page")
+      .locator("tbody tr")
+      .filter({ hasText: name })
+    await expect(row).toBeVisible()
+    await row.getByRole("button", { name: "Edit" }).click()
+    return page.getByRole("dialog", { name: "Edit product" })
+  }
+
+  const floorName = `Floor tile ${suffix}`
+  await createProduct(floorName, { floor: true, wall: false })
+  let editDialog = await openProduct(floorName)
+  await expect(
+    editDialog.getByRole("checkbox", { name: "Floor" }),
+  ).toBeChecked()
+  await expect(
+    editDialog.getByRole("checkbox", { name: "Wall" }),
+  ).not.toBeChecked()
+  await editDialog.getByRole("checkbox", { name: "Wall" }).check()
+  await editDialog.getByRole("button", { name: "Save" }).click()
+  await expect(page.getByText("Product updated successfully")).toBeVisible()
+
+  editDialog = await openProduct(floorName)
+  await expect(
+    editDialog.getByRole("checkbox", { name: "Floor" }),
+  ).toBeChecked()
+  await expect(editDialog.getByRole("checkbox", { name: "Wall" })).toBeChecked()
+  await editDialog.getByRole("button", { name: "Cancel" }).click()
+
+  const wallName = `Wall tile ${suffix}`
+  await createProduct(wallName, { floor: false, wall: true })
+  editDialog = await openProduct(wallName)
+  await expect(
+    editDialog.getByRole("checkbox", { name: "Floor" }),
+  ).not.toBeChecked()
+  await expect(editDialog.getByRole("checkbox", { name: "Wall" })).toBeChecked()
+  await editDialog.getByRole("button", { name: "Cancel" }).click()
+
+  const bothName = `Dual surface ${suffix}`
+  await createProduct(bothName, { floor: true, wall: true })
+  editDialog = await openProduct(bothName)
+  await expect(
+    editDialog.getByRole("checkbox", { name: "Floor" }),
+  ).toBeChecked()
+  await expect(editDialog.getByRole("checkbox", { name: "Wall" })).toBeChecked()
+  await editDialog.getByRole("button", { name: "Cancel" }).click()
+
+  const emptyName = `No surface ${suffix}`
+  await createProduct(emptyName, { floor: false, wall: false })
+  editDialog = await openProduct(emptyName)
+  await expect(
+    editDialog.getByRole("checkbox", { name: "Floor" }),
+  ).not.toBeChecked()
+  await expect(
+    editDialog.getByRole("checkbox", { name: "Wall" }),
+  ).not.toBeChecked()
+  await editDialog.getByRole("button", { name: "Cancel" }).click()
+
+  for (const name of [floorName, wallName, bothName, emptyName]) {
+    const response = await page.request.get(
+      `${apiBase}/api/v1/products/?q=SUR-${name.toLowerCase().replaceAll(" ", "-")}`,
+      { headers: { Authorization: `Bearer ${token}` } },
+    )
+    const products = await response.json()
+    const created = products.data.find(
+      (product: { name: string }) => product.name === name,
+    )
+    expect(created).toBeTruthy()
+    await page.request.delete(`${apiBase}/api/v1/products/${created.id}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+  }
+  await page.request.delete(`${apiBase}/api/v1/categories/${category.id}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+})
+
 test("staff can recover image uploads and manage primary, order, and deletion", async ({
   page,
 }) => {

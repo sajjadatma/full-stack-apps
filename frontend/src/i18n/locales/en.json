@@ -150,6 +150,8 @@
     "finish": "Finish",
     "usageArea": "Usage area",
     "colorFamily": "Color family",
+    "suitableSurfaces": "Suitable surfaces",
+    "suitableSurfacesHelp": "At least one suitable surface is required for this product to be selectable in the AI Visualizer.",
     "widthMm": "Width (mm)",
     "heightMm": "Height (mm)",
     "thicknessMm": "Thickness (mm)",

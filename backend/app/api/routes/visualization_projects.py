@@ -9,8 +9,9 @@ from sqlmodel import col, func, select
 from app.api.deps import CurrentUser, SessionDep, ensure_permissions
 from app.core.config import settings
 from app.core.i18n import t
-from app.core.rbac import GENERATIONS_CREATE
+from app.core.rbac import GENERATIONS_CREATE, GENERATIONS_READ_ANY, has_permissions
 from app.models import (
+    GenerationJob,
     VisualizationProject,
     VisualizationProjectPublic,
     VisualizationProjectsPublic,
@@ -35,16 +36,27 @@ def _project_public(project: VisualizationProject) -> VisualizationProjectPublic
     )
 
 
-def _owned_project(
+def _readable_project(
     *, session: SessionDep, current_user: CurrentUser, project_id: uuid.UUID
 ) -> VisualizationProject:
-    project = session.exec(
-        select(VisualizationProject).where(
-            VisualizationProject.id == project_id,
-            VisualizationProject.owner_id == current_user.id,
-        )
-    ).first()
+    project = session.get(VisualizationProject, project_id)
     if project is None:
+        raise HTTPException(
+            status_code=404, detail=t("visualization_project_not_found")
+        )
+    if project.owner_id == current_user.id:
+        return project
+
+    can_read_any = has_permissions(current_user, GENERATIONS_READ_ANY)
+    has_generation = can_read_any and (
+        session.exec(
+            select(GenerationJob.id)
+            .where(GenerationJob.project_id == project.id)
+            .limit(1)
+        ).first()
+        is not None
+    )
+    if not has_generation:
         raise HTTPException(
             status_code=404, detail=t("visualization_project_not_found")
         )
@@ -136,7 +148,7 @@ def read_visualization_project(
     project_id: uuid.UUID,
 ) -> VisualizationProjectPublic:
     return _project_public(
-        _owned_project(
+        _readable_project(
             session=session, current_user=current_user, project_id=project_id
         )
     )
@@ -161,7 +173,7 @@ def read_visualization_source_image(
     current_user: CurrentUser,
     project_id: uuid.UUID,
 ) -> StreamingResponse:
-    project = _owned_project(
+    project = _readable_project(
         session=session, current_user=current_user, project_id=project_id
     )
     try:

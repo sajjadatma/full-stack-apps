@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 from typing import Any
+from uuid import UUID
 
 import pytest
 from fastapi.testclient import TestClient
@@ -12,7 +13,15 @@ from app import crud
 from app.api.routes import visualization_projects
 from app.core.config import settings
 from app.core.db import engine
-from app.models import Role, UserCreate, VisualizationProject
+from app.core.rbac import GENERATIONS_CREATE, GENERATIONS_READ_ANY
+from app.models import (
+    Category,
+    GenerationJob,
+    Product,
+    Role,
+    UserCreate,
+    VisualizationProject,
+)
 from app.services.storage import LocalStorageBackend, StorageService
 from tests.utils.user import authentication_token_from_email
 from tests.utils.utils import random_email, random_lower_string
@@ -77,6 +86,53 @@ def _upload(
         files=files,
         data={"name": name},
     )
+
+
+def _create_read_any_user(client: TestClient, db: Session) -> dict[str, str]:
+    suffix = random_lower_string()
+    permissions = crud.get_permissions_by_codes(
+        session=db, codes=[GENERATIONS_CREATE, GENERATIONS_READ_ANY]
+    )
+    role = Role(
+        name=f"Generation support {suffix}",
+        slug=f"generation-support-{suffix}",
+        is_system=False,
+        permissions=permissions,
+    )
+    db.add(role)
+    db.commit()
+    db.refresh(role)
+    user = crud.create_user(
+        session=db,
+        user_create=UserCreate(email=random_email(), password="test-password-123"),
+        role=role,
+    )
+    return authentication_token_from_email(client=client, email=user.email, db=db)
+
+
+def _add_generation_job(db: Session, project_id: str) -> None:
+    suffix = random_lower_string()
+    category = Category(
+        name=f"Support tile category {suffix}", slug=f"support-cat-{suffix}"
+    )
+    db.add(category)
+    db.flush()
+    product = Product(
+        name=f"Support tile {suffix}",
+        sku=f"SUPPORT-{suffix}",
+        slug=f"support-tile-{suffix}",
+        category_id=category.id,
+    )
+    db.add(product)
+    db.flush()
+    db.add(
+        GenerationJob(
+            project_id=UUID(project_id),
+            selected_product_id=product.id,
+            target_surface="FLOOR",
+        )
+    )
+    db.commit()
 
 
 def test_room_upload_creates_owned_project_with_validated_metadata(
@@ -262,6 +318,62 @@ def test_project_and_source_image_are_hidden_from_other_users(
     )
 
 
+def test_read_any_can_read_foreign_project_and_source_image_with_generation(
+    client: TestClient,
+    db: Session,
+    superuser_token_headers: dict[str, str],
+    local_storage: StorageService,  # noqa: ARG001
+) -> None:
+    project = _upload(client, superuser_token_headers).json()
+    _add_generation_job(db, project["id"])
+    support_headers = _create_read_any_user(client, db)
+    project_url = f"{settings.API_V1_STR}/visualization-projects/{project['id']}"
+
+    detail = client.get(project_url, headers=support_headers)
+    image = client.get(f"{project_url}/source-image", headers=support_headers)
+
+    assert detail.status_code == 200, detail.text
+    assert detail.json()["id"] == project["id"]
+    assert image.status_code == 200
+    assert image.headers["content-type"] == "image/png"
+    assert image.content == _png_bytes()
+
+
+def test_read_any_cannot_read_foreign_project_without_generation(
+    client: TestClient,
+    db: Session,
+    superuser_token_headers: dict[str, str],
+) -> None:
+    project = _upload(client, superuser_token_headers).json()
+    support_headers = _create_read_any_user(client, db)
+    project_url = f"{settings.API_V1_STR}/visualization-projects/{project['id']}"
+
+    detail = client.get(project_url, headers=support_headers)
+    image = client.get(f"{project_url}/source-image", headers=support_headers)
+
+    assert detail.status_code == 404
+    assert image.status_code == 404
+
+
+def test_read_any_visualization_project_list_remains_owner_scoped(
+    client: TestClient,
+    db: Session,
+    superuser_token_headers: dict[str, str],
+) -> None:
+    support_headers = _create_read_any_user(client, db)
+    own_project = _upload(client, support_headers, name="Support owner's room").json()
+    foreign_project = _upload(client, superuser_token_headers).json()
+
+    response = client.get(
+        f"{settings.API_V1_STR}/visualization-projects/", headers=support_headers
+    )
+    listed_ids = {item["id"] for item in response.json()["data"]}
+
+    assert response.status_code == 200
+    assert own_project["id"] in listed_ids
+    assert foreign_project["id"] not in listed_ids
+
+
 @pytest.mark.parametrize(
     ("content", "content_type"),
     [
@@ -289,7 +401,20 @@ def test_owner_receives_streamed_room_image_with_validated_content_type(
         f"{settings.API_V1_STR}/visualization-projects/{project['id']}/source-image",
         headers=superuser_token_headers,
     )
+    detail = client.get(
+        f"{settings.API_V1_STR}/visualization-projects/{project['id']}",
+        headers=superuser_token_headers,
+    )
+    unauthenticated_detail = client.get(
+        f"{settings.API_V1_STR}/visualization-projects/{project['id']}"
+    )
+    unauthenticated_image = client.get(
+        f"{settings.API_V1_STR}/visualization-projects/{project['id']}/source-image"
+    )
 
+    assert detail.status_code == 200
+    assert unauthenticated_detail.status_code == 401
+    assert unauthenticated_image.status_code == 401
     assert response.status_code == 200
     assert response.headers["content-type"] == content_type
     assert response.headers["cache-control"] == "private, no-store"

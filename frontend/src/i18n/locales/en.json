@@ -47,7 +47,6 @@
   },
   "navigation": {
     "dashboard": "Dashboard",
-    "items": "Items",
     "products": "Products",
     "visualizer": "Visualizer",
     "generations": "Generation history",
@@ -93,7 +92,6 @@
     "signedInAs": "Signed in as",
     "quickLinksTitle": "Quick links",
     "quickLinksSubtitle": "Jump back into your workspace",
-    "itemsCardDescription": "Create and manage your items",
     "adminCardDescription": "Manage users and roles",
     "metricsTitle": "TileVision overview",
     "loading": "Loading dashboard metrics",
@@ -110,22 +108,6 @@
     "productManagementDescription": "Manage tile products, stock, and pricing",
     "visualizerDescription": "Preview products in a room",
     "generationsDescription": "Review your previous visualizations"
-  },
-  "items": {
-    "title": "Items",
-    "subtitle": "Create and manage your items",
-    "emptyTitle": "You don't have any items yet",
-    "emptySubtitle": "Add a new item to get started",
-    "addItem": "Add Item",
-    "editItem": "Edit Item",
-    "deleteItem": "Delete Item",
-    "addItemDescription": "Fill in the details to add a new item.",
-    "editItemDescription": "Update the item details below.",
-    "deleteItemDescription": "This item will be permanently deleted. Are you sure? You will not be able to undo this action.",
-    "createdSuccess": "Item created successfully",
-    "updatedSuccess": "Item updated successfully",
-    "deletedSuccess": "The item was deleted successfully",
-    "noDescription": "No description"
   },
   "products": {
     "title": "Product catalog",
@@ -559,7 +541,6 @@
     "recover": "Recover Password - FastAPI Template",
     "reset": "Reset Password - FastAPI Template",
     "dashboard": "Dashboard - FastAPI Template",
-    "items": "Items - FastAPI Template",
     "products": "Products - FastAPI Template",
     "visualizer": "Visualizer - FastAPI Template",
     "generations": "Generation history - FastAPI Template",

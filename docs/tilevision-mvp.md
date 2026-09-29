@@ -2,10 +2,10 @@
 
 - **Document ID:** TV-MVP-000
 - **Title:** TileVision MVP Product Domain (source of truth)
-- **Version:** 1.2
+- **Version:** 1.3
 - **Status:** Approved — authoritative for all TileVision tasks (T01+)
 - **Owner:** Product
-- **Date:** 2026-09-28
+- **Date:** 2026-09-30
 - **Applies to:** `full-stack-fastapi-template` (branch `TileVision`)
 - **Supersedes:** none. This document is the single source of truth for the
   TileVision product domain. Where a later task and this document disagree,
@@ -475,6 +475,9 @@ so a result can be explained and reproduced where the provider allows it.
 
 ### 7.2 Non-goals (explicit)
 
+- **Template Item domain:** Items are not part of the TileVision product UI.
+  The legacy Item backend model, table/data, API, and migrations remain
+  temporarily for compatibility; they are not a TileVision catalog surface.
 - Applying the product to **both** floor and wall in a single generation
   (multi-surface runs are out of scope).
 - **Manual masking** or region editing by the user; surface region selection
@@ -614,8 +617,9 @@ Numbered and independently verifiable.
   backend; unauthorized requests receive 403 and cross-user access is denied.
 - **AC-8 — Localization.** All new UI is available in English and Farsi with
   correct RTL layout.
-- **AC-9 — No regressions.** Existing authentication, RBAC, admin, items, and
-  settings tests continue to pass.
+- **AC-9 — No regressions.** Existing authentication, RBAC, admin, settings,
+  and retained legacy Item backend/API compatibility tests continue to pass.
+  The retired template Item management UI is not required to remain exposed.
 
 ---
 
@@ -628,9 +632,10 @@ implements the relevant area.
   the specific provider/model is undecided.
 - **A-2 → OQ-2 (media storage).** Assume the local-volume storage interface in
   §8.3 for MVP; object storage is deferred.
-- **A-3 → OQ-3 (sample `Item` domain).** The existing `Item` resource is the
-  template's placeholder. Assume the TileVision `Product` catalog supersedes
-  it; whether `Item` is removed, migrated, or kept is decided later.
+- **A-3 / OQ-3 (resolved in v1.3).** The sample `Item` domain is not part of the
+  TileVision product UI. Its legacy backend model, table/data, API, and
+  migrations remain temporarily for compatibility; no destructive migration is
+  part of the TileVision MVP.
 - **A-4 → OQ-4 (pricing/stock defaults).** Assume a single company currency
   and a decimal price with a `price_unit`; defaults are finalized later.
 - **A-5 → OQ-5 (limits/retention).** Assume configurable size/format/
@@ -646,7 +651,6 @@ implements the relevant area.
 - **OQ-1** — Which AI provider and model perform surface replacement? (Drives
   cost, latency, quality, and the mask source.)
 - **OQ-2** — Local volume or object storage for images and results?
-- **OQ-3** — Is the sample `Item` domain removed in favor of `Product`?
 - **OQ-4** — Default currency and price/stock units.
 - **OQ-5** — Concrete upload limits and generation rate caps.
 - **OQ-6** — When mechanical preservation verification is implemented, should
@@ -657,6 +661,10 @@ implements the relevant area.
 
 ## 12. Change history
 
+- v1.3 (2026-09-30): Resolves OQ-3: the template `Item` domain is not part of
+  the TileVision UI, while its backend/API/data remain temporarily for
+  compatibility. Narrows AC-9 to require the retained backend/API regressions,
+  not the retired management UI.
 - v1.2 (2026-09-28): Defines MVP `COMPLETED` semantics as provider success,
   validated output format/dimensions, successful storage, and persisted
   terminal state. Clarifies that mechanical preservation verification is

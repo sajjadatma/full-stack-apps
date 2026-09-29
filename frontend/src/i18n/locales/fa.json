@@ -47,7 +47,6 @@
   },
   "navigation": {
     "dashboard": "داشبورد",
-    "items": "آیتم‌ها",
     "products": "محصولات",
     "visualizer": "تصویرساز",
     "generations": "تاریخچه تصویرسازی",
@@ -93,7 +92,6 @@
     "signedInAs": "وارد شده به‌عنوان",
     "quickLinksTitle": "دسترسی سریع",
     "quickLinksSubtitle": "به فضای کاری خود بازگردید",
-    "itemsCardDescription": "آیتم‌های خود را ایجاد و مدیریت کنید",
     "adminCardDescription": "کاربران و نقش‌ها را مدیریت کنید",
     "metricsTitle": "نمای کلی TileVision",
     "loading": "در حال بارگذاری آمار داشبورد",
@@ -110,22 +108,6 @@
     "productManagementDescription": "مدیریت محصولات کاشی، موجودی و قیمت",
     "visualizerDescription": "پیش‌نمایش محصولات در فضای اتاق",
     "generationsDescription": "مشاهده پیش‌نمایش‌های قبلی"
-  },
-  "items": {
-    "title": "آیتم‌ها",
-    "subtitle": "آیتم‌های خود را ایجاد و مدیریت کنید",
-    "emptyTitle": "هنوز هیچ آیتمی ندارید",
-    "emptySubtitle": "برای شروع یک آیتم جدید اضافه کنید",
-    "addItem": "افزودن آیتم",
-    "editItem": "ویرایش آیتم",
-    "deleteItem": "حذف آیتم",
-    "addItemDescription": "برای افزودن آیتم جدید، جزئیات را وارد کنید.",
-    "editItemDescription": "جزئیات آیتم را در زیر به‌روزرسانی کنید.",
-    "deleteItemDescription": "این آیتم برای همیشه حذف خواهد شد. آیا مطمئن هستید؟ امکان بازگردانی این عمل وجود ندارد.",
-    "createdSuccess": "آیتم با موفقیت ایجاد شد",
-    "updatedSuccess": "آیتم با موفقیت به‌روزرسانی شد",
-    "deletedSuccess": "آیتم با موفقیت حذف شد",
-    "noDescription": "بدون توضیحات"
   },
   "products": {
     "title": "فهرست محصولات",
@@ -559,7 +541,6 @@
     "recover": "بازیابی رمز عبور - قالب FastAPI",
     "reset": "بازنشانی رمز عبور - قالب FastAPI",
     "dashboard": "داشبورد - قالب FastAPI",
-    "items": "آیتم‌ها - قالب FastAPI",
     "products": "محصولات - قالب FastAPI",
     "visualizer": "تصویرساز - قالب FastAPI",
     "generations": "تاریخچه تصویرسازی - قالب FastAPI",

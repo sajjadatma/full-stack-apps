@@ -1,5 +1,4 @@
 import {
-  Briefcase,
   FolderTree,
   History,
   Home,
@@ -31,7 +30,6 @@ export function AppSidebar() {
 
   const baseItems: Item[] = [
     { icon: Home, title: t("navigation.dashboard"), path: "/" },
-    { icon: Briefcase, title: t("navigation.items"), path: "/items" },
   ]
 
   const items = [...baseItems]

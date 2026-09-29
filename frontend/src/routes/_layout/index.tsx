@@ -1,7 +1,16 @@
+import { useQuery } from "@tanstack/react-query"
 import { createFileRoute, Link as RouterLink } from "@tanstack/react-router"
-import { Briefcase, ChevronRight, Users } from "lucide-react"
+import {
+  AlertCircle,
+  ChevronRight,
+  History,
+  LoaderCircle,
+  Package,
+  PanelsTopLeft,
+  Users,
+} from "lucide-react"
 import { useTranslation } from "react-i18next"
-
+import { DashboardService } from "@/client"
 import { roleLabel } from "@/components/Admin/roleLabel"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
@@ -30,11 +39,24 @@ export const Route = createFileRoute("/_layout/")({
 function Dashboard() {
   const { user: currentUser, hasPermission } = useAuth()
   const { t } = useTranslation()
+  const summaryQuery = useQuery({
+    queryKey: ["dashboard-summary"],
+    queryFn: async () => (await DashboardService.readDashboardSummary()).data,
+    retry: false,
+  })
 
   const name = currentUser?.full_name || currentUser?.email || ""
-  const canReadItems =
-    hasPermission("items.read_any") || hasPermission("items.read_own")
+  const canReadProducts =
+    hasPermission("products.read") || hasPermission("products.read_any")
   const canReadUsers = hasPermission("users.read")
+  const canVisualize =
+    hasPermission("generations.create") &&
+    hasPermission("generations.read_own") &&
+    canReadProducts
+  const canReadGenerations =
+    hasPermission("generations.read_own") ||
+    hasPermission("generations.read_any")
+  const summary = summaryQuery.data
 
   return (
     <div className="flex flex-col gap-6">
@@ -46,6 +68,85 @@ function Dashboard() {
           {t("dashboard.welcomeBack")}
         </p>
       </header>
+
+      {summaryQuery.isPending && (
+        <div className="grid min-h-24 place-items-center" role="status">
+          <LoaderCircle className="size-7 animate-spin text-primary" />
+          <span className="sr-only">{t("dashboard.loading")}</span>
+        </div>
+      )}
+      {summaryQuery.isError && (
+        <div
+          className="flex items-center gap-2 rounded-xl border border-error p-4 text-on-surface"
+          role="alert"
+        >
+          <AlertCircle className="size-5 text-error" />
+          {t("dashboard.loadError")}
+        </div>
+      )}
+      {summary && (
+        <section
+          className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"
+          aria-label={t("dashboard.metricsTitle")}
+        >
+          {summary.products && (
+            <>
+              <MetricCard
+                label={t("dashboard.totalProducts")}
+                value={summary.products.total_products}
+                testId="metric-total-products"
+                icon={Package}
+              />
+              <MetricCard
+                label={t("dashboard.activeProducts")}
+                value={summary.products.active_products}
+                testId="metric-active-products"
+                icon={Package}
+              />
+              <MetricCard
+                label={t("dashboard.lowStockProducts")}
+                value={summary.products.low_stock_products}
+                testId="metric-low-stock-products"
+                icon={AlertCircle}
+              />
+            </>
+          )}
+          {summary.generations && (
+            <>
+              <MetricCard
+                label={t("dashboard.totalGenerations")}
+                value={summary.generations.total}
+                testId="metric-generations-total"
+                icon={PanelsTopLeft}
+              />
+              <MetricCard
+                label={t("dashboard.pendingGenerations")}
+                value={summary.generations.pending}
+                testId="metric-generations-pending"
+                icon={History}
+              />
+              <MetricCard
+                label={t("dashboard.processingGenerations")}
+                value={summary.generations.processing}
+                testId="metric-generations-processing"
+                icon={History}
+              />
+              <MetricCard
+                label={t("dashboard.completedGenerations")}
+                value={summary.generations.completed}
+                testId="metric-generations-completed"
+                icon={History}
+              />
+              <MetricCard
+                label={t("dashboard.failedGenerations")}
+                value={summary.generations.failed}
+                testId="metric-generations-failed"
+                icon={AlertCircle}
+              />
+            </>
+          )}
+        </section>
+      )}
 
       <div className="grid gap-4 lg:grid-cols-3">
         <Card>
@@ -83,12 +184,28 @@ function Dashboard() {
             </CardDescription>
           </CardHeader>
           <CardContent className="grid gap-3 sm:grid-cols-2">
-            {canReadItems && (
+            {canReadProducts && (
               <QuickLink
-                to="/items"
-                icon={Briefcase}
-                title={t("navigation.items")}
-                description={t("dashboard.itemsCardDescription")}
+                to="/products"
+                icon={Package}
+                title={t("dashboard.productManagement")}
+                description={t("dashboard.productManagementDescription")}
+              />
+            )}
+            {canVisualize && (
+              <QuickLink
+                to="/visualizer"
+                icon={PanelsTopLeft}
+                title={t("navigation.visualizer")}
+                description={t("dashboard.visualizerDescription")}
+              />
+            )}
+            {canReadGenerations && (
+              <QuickLink
+                to="/generations"
+                icon={History}
+                title={t("navigation.generations")}
+                description={t("dashboard.generationsDescription")}
               />
             )}
             {canReadUsers && (
@@ -107,10 +224,41 @@ function Dashboard() {
 }
 
 interface QuickLinkProps {
-  to: "/items" | "/admin"
+  to: "/products" | "/visualizer" | "/generations" | "/admin"
   icon: React.ComponentType<{ className?: string }>
   title: string
   description: string
+}
+
+function MetricCard({
+  label,
+  value,
+  testId,
+  icon: Icon,
+}: {
+  label: string
+  value: number
+  testId: string
+  icon: React.ComponentType<{ className?: string }>
+}) {
+  return (
+    <Card>
+      <CardHeader className="flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="text-label-large text-on-surface-variant">
+          {label}
+        </CardTitle>
+        <Icon className="size-5 text-primary" />
+      </CardHeader>
+      <CardContent>
+        <p
+          className="text-headline-medium text-on-surface"
+          data-testid={testId}
+        >
+          {value.toLocaleString()}
+        </p>
+      </CardContent>
+    </Card>
+  )
 }
 
 function QuickLink({ to, icon: Icon, title, description }: QuickLinkProps) {

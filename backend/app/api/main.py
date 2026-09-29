@@ -3,6 +3,7 @@ from fastapi import APIRouter
 from app.api.routes import (
     brands,
     categories,
+    dashboard,
     generations,
     items,
     login,
@@ -20,6 +21,7 @@ api_router.include_router(login.router)
 api_router.include_router(users.router)
 api_router.include_router(roles.router)
 api_router.include_router(utils.router)
+api_router.include_router(dashboard.router)
 api_router.include_router(items.router)
 api_router.include_router(categories.router)
 api_router.include_router(brands.router)

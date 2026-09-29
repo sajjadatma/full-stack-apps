@@ -239,6 +239,58 @@ export type CategoryUpdate = {
 };
 
 /**
+ * DashboardGenerationMetrics
+ */
+export type DashboardGenerationMetrics = {
+    /**
+     * Total
+     */
+    total: number;
+    /**
+     * Pending
+     */
+    pending: number;
+    /**
+     * Processing
+     */
+    processing: number;
+    /**
+     * Completed
+     */
+    completed: number;
+    /**
+     * Failed
+     */
+    failed: number;
+};
+
+/**
+ * DashboardProductMetrics
+ */
+export type DashboardProductMetrics = {
+    /**
+     * Total Products
+     */
+    total_products: number;
+    /**
+     * Active Products
+     */
+    active_products: number;
+    /**
+     * Low Stock Products
+     */
+    low_stock_products: number;
+};
+
+/**
+ * DashboardSummaryPublic
+ */
+export type DashboardSummaryPublic = {
+    products?: DashboardProductMetrics | null;
+    generations?: DashboardGenerationMetrics | null;
+};
+
+/**
  * GenerationJobPublic
  */
 export type GenerationJobPublic = {
@@ -2057,6 +2109,22 @@ export type utilsHealthCheckResponses = {
 };
 
 export type utilsHealthCheckResponse = utilsHealthCheckResponses[keyof utilsHealthCheckResponses];
+
+export type dashboardReadDashboardSummaryData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/dashboard/summary/';
+};
+
+export type dashboardReadDashboardSummaryResponses = {
+    /**
+     * Successful Response
+     */
+    200: DashboardSummaryPublic;
+};
+
+export type dashboardReadDashboardSummaryResponse = dashboardReadDashboardSummaryResponses[keyof dashboardReadDashboardSummaryResponses];
 
 export type itemsReadItemsData = {
     body?: never;

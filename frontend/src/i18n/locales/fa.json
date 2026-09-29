@@ -94,7 +94,22 @@
     "quickLinksTitle": "دسترسی سریع",
     "quickLinksSubtitle": "به فضای کاری خود بازگردید",
     "itemsCardDescription": "آیتم‌های خود را ایجاد و مدیریت کنید",
-    "adminCardDescription": "کاربران و نقش‌ها را مدیریت کنید"
+    "adminCardDescription": "کاربران و نقش‌ها را مدیریت کنید",
+    "metricsTitle": "نمای کلی TileVision",
+    "loading": "در حال بارگذاری آمار داشبورد",
+    "loadError": "بارگذاری آمار داشبورد ممکن نشد",
+    "totalProducts": "مجموع محصولات",
+    "activeProducts": "محصولات فعال",
+    "lowStockProducts": "محصولات با موجودی کم",
+    "totalGenerations": "مجموع تصاویر تولیدشده",
+    "pendingGenerations": "در انتظار",
+    "processingGenerations": "در حال پردازش",
+    "completedGenerations": "تکمیل‌شده",
+    "failedGenerations": "ناموفق",
+    "productManagement": "مدیریت محصولات",
+    "productManagementDescription": "مدیریت محصولات کاشی، موجودی و قیمت",
+    "visualizerDescription": "پیش‌نمایش محصولات در فضای اتاق",
+    "generationsDescription": "مشاهده پیش‌نمایش‌های قبلی"
   },
   "items": {
     "title": "آیتم‌ها",

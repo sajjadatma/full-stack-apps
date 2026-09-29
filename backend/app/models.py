@@ -453,6 +453,25 @@ class ProductsPublic(SQLModel):
     count: int
 
 
+class DashboardProductMetrics(SQLModel):
+    total_products: int
+    active_products: int
+    low_stock_products: int
+
+
+class DashboardGenerationMetrics(SQLModel):
+    total: int
+    pending: int
+    processing: int
+    completed: int
+    failed: int
+
+
+class DashboardSummaryPublic(SQLModel):
+    products: DashboardProductMetrics | None = None
+    generations: DashboardGenerationMetrics | None = None
+
+
 class ProductImageBase(SQLModel):
     product_id: uuid.UUID
     storage_key: str = Field(min_length=1, max_length=1024)

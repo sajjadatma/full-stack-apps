@@ -94,7 +94,22 @@
     "quickLinksTitle": "Quick links",
     "quickLinksSubtitle": "Jump back into your workspace",
     "itemsCardDescription": "Create and manage your items",
-    "adminCardDescription": "Manage users and roles"
+    "adminCardDescription": "Manage users and roles",
+    "metricsTitle": "TileVision overview",
+    "loading": "Loading dashboard metrics",
+    "loadError": "Could not load dashboard metrics",
+    "totalProducts": "Total products",
+    "activeProducts": "Active products",
+    "lowStockProducts": "Low-stock products",
+    "totalGenerations": "Total generations",
+    "pendingGenerations": "Pending",
+    "processingGenerations": "Processing",
+    "completedGenerations": "Completed",
+    "failedGenerations": "Failed",
+    "productManagement": "Product Management",
+    "productManagementDescription": "Manage tile products, stock, and pricing",
+    "visualizerDescription": "Preview products in a room",
+    "generationsDescription": "Review your previous visualizations"
   },
   "items": {
     "title": "Items",

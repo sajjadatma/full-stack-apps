@@ -202,18 +202,22 @@ def read_generations(
     skip: Annotated[int, Query(ge=0)] = 0,
     limit: Annotated[int, Query(ge=1, le=100)] = 20,
 ) -> GenerationJobsPublic:
-    ensure_permissions(current_user, GENERATIONS_READ_OWN)
+    ensure_permissions(
+        current_user,
+        GENERATIONS_READ_OWN,
+        GENERATIONS_READ_ANY,
+        require_all=False,
+    )
+    can_read_any = has_permissions(current_user, GENERATIONS_READ_ANY)
     owner_join = GenerationJob.project_id == VisualizationProject.id
-    count = session.exec(
+    count_statement = (
         select(func.count())
         .select_from(GenerationJob)
         .join(VisualizationProject, owner_join)
-        .where(VisualizationProject.owner_id == current_user.id)
-    ).one()
-    jobs = session.exec(
+    )
+    jobs_statement = (
         select(GenerationJob)
         .join(VisualizationProject, owner_join)
-        .where(VisualizationProject.owner_id == current_user.id)
         .options(
             selectinload(GenerationJob.selected_product).selectinload(Product.images)
         )
@@ -223,7 +227,13 @@ def read_generations(
         )
         .offset(skip)
         .limit(limit)
-    ).all()
+    )
+    if not can_read_any:
+        owner_filter = VisualizationProject.owner_id == current_user.id
+        count_statement = count_statement.where(owner_filter)
+        jobs_statement = jobs_statement.where(owner_filter)
+    count = session.exec(count_statement).one()
+    jobs = session.exec(jobs_statement).all()
     return GenerationJobsPublic(data=[_job_public(job) for job in jobs], count=count)
 
 

@@ -190,6 +190,18 @@ def _fake_provider(
     )
 
 
+@pytest.fixture(autouse=True)
+def forbid_unmocked_ai_provider(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Prevent any API test in this module from reaching a paid provider."""
+
+    def fail_if_unmocked() -> None:
+        pytest.fail("Generation API tests must replace the external AI provider")
+
+    monkeypatch.setattr(
+        generation_processor, "create_image_edit_provider", fail_if_unmocked
+    )
+
+
 def test_generation_lifecycle_persists_safe_metadata_and_streams_result(
     client: TestClient,
     superuser_token_headers: dict[str, str],
@@ -576,6 +588,58 @@ def test_owner_scoped_history_is_paginated_newest_first_and_support_can_read_any
     ordering = [(row["created_at"], row["id"]) for row in rows]
     assert ordering == sorted(ordering, reverse=True)
     assert denied.status_code == 404
+
+
+def test_history_read_any_sees_foreign_jobs_but_read_own_does_not(
+    client: TestClient,
+    normal_user_token_headers: dict[str, str],
+    superuser_token_headers: dict[str, str],
+    local_storage: StorageService,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _fake_provider(monkeypatch, FakeImageEditProvider())
+    customer_project = _create_project(client, normal_user_token_headers)
+    staff_project = _create_project(client, superuser_token_headers)
+    product = _create_product(client, superuser_token_headers)
+    customer_job = _create_generation(
+        client,
+        normal_user_token_headers,
+        customer_project["id"],
+        product["id"],
+    )
+    staff_job = _create_generation(
+        client,
+        superuser_token_headers,
+        staff_project["id"],
+        product["id"],
+    )
+    assert customer_job.status_code == staff_job.status_code == 202
+
+    customer_history = client.get(
+        f"{settings.API_V1_STR}/generations/",
+        headers=normal_user_token_headers,
+    )
+    support_url = f"{settings.API_V1_STR}/generations/"
+    support_history = client.get(
+        support_url,
+        headers=superuser_token_headers,
+        params={"skip": 0, "limit": 100},
+    )
+    customer_ids = {row["id"] for row in customer_history.json()["data"]}
+    support_ids = set()
+    support_count = support_history.json()["count"]
+    for offset in range(0, support_count, 100):
+        page = client.get(
+            support_url,
+            headers=superuser_token_headers,
+            params={"skip": offset, "limit": 100},
+        )
+        support_ids.update(row["id"] for row in page.json()["data"])
+
+    assert customer_history.status_code == support_history.status_code == 200
+    assert customer_job.json()["id"] in customer_ids
+    assert staff_job.json()["id"] not in customer_ids
+    assert {customer_job.json()["id"], staff_job.json()["id"]} <= support_ids
 
 
 def test_generation_history_includes_inactive_product_without_catalog_access(

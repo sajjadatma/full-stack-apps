@@ -6,9 +6,10 @@ from fastapi import APIRouter, File, Form, HTTPException, Query, UploadFile
 from fastapi.responses import StreamingResponse
 from sqlmodel import col, func, select
 
-from app.api.deps import CurrentUser, SessionDep
+from app.api.deps import CurrentUser, SessionDep, ensure_permissions
 from app.core.config import settings
 from app.core.i18n import t
+from app.core.rbac import GENERATIONS_CREATE
 from app.models import (
     VisualizationProject,
     VisualizationProjectPublic,
@@ -58,6 +59,7 @@ def create_visualization_project(
     file: Annotated[UploadFile, File()],
     name: Annotated[str | None, Form(max_length=255)] = None,
 ) -> VisualizationProjectPublic:
+    ensure_permissions(current_user, GENERATIONS_CREATE)
     storage = get_storage_service()
     content = file.file.read(storage.max_file_size_bytes + 1)
     content_type = file.content_type or ""

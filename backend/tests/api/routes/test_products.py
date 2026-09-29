@@ -171,6 +171,52 @@ def test_combined_product_filters_and_accurate_pagination(
     assert low_stock.json()["data"][0]["stock_state"] == "low_stock"
 
 
+def test_stock_state_filter_covers_zero_threshold_and_unthresholded_stock(
+    client: TestClient,
+    superuser_token_headers: dict[str, str],
+) -> None:
+    category_id = _create_category(client, superuser_token_headers)
+    brand_id = _create_brand(client, superuser_token_headers)
+    expected_by_state = {
+        "out_of_stock": {"zero-stock"},
+        "low_stock": {"at-threshold"},
+        "in_stock": {"above-threshold", "no-threshold"},
+    }
+    payloads = [
+        ("zero-stock", 0, 5),
+        ("at-threshold", 5, 5),
+        ("above-threshold", 6, 5),
+        ("no-threshold", 1, None),
+    ]
+    for label, stock, threshold in payloads:
+        payload = _product_payload(category_id, brand_id)
+        payload.update(
+            sku=f"STOCK-{label}",
+            slug=f"stock-{label}",
+            stock_quantity=stock,
+            low_stock_threshold=threshold,
+        )
+        response = client.post(
+            f"{settings.API_V1_STR}/products/",
+            headers=superuser_token_headers,
+            json=payload,
+        )
+        assert response.status_code == 201, response.text
+
+    for stock_state, expected_skus in expected_by_state.items():
+        response = client.get(
+            f"{settings.API_V1_STR}/products/",
+            headers=superuser_token_headers,
+            params={"category_id": category_id, "stock_state": stock_state},
+        )
+
+        assert response.status_code == 200, response.text
+        assert {row["sku"] for row in response.json()["data"]} == {
+            f"STOCK-{label}" for label in expected_skus
+        }
+        assert response.json()["count"] == len(expected_skus)
+
+
 def test_regular_user_sees_only_active_products(
     client: TestClient,
     superuser_token_headers: dict[str, str],
@@ -344,4 +390,21 @@ def test_product_mutations_require_permissions(
         headers=normal_user_token_headers,
         json={"name": "Unauthorized"} if method == "patch" else None,
     )
+    assert response.status_code == 403
+
+
+def test_product_creation_requires_create_permission(
+    client: TestClient,
+    superuser_token_headers: dict[str, str],
+    normal_user_token_headers: dict[str, str],
+) -> None:
+    category_id = _create_category(client, superuser_token_headers)
+    brand_id = _create_brand(client, superuser_token_headers)
+
+    response = client.post(
+        f"{settings.API_V1_STR}/products/",
+        headers=normal_user_token_headers,
+        json=_product_payload(category_id, brand_id),
+    )
+
     assert response.status_code == 403

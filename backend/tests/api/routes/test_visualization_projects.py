@@ -8,11 +8,14 @@ from fastapi.testclient import TestClient
 from sqlalchemy.exc import SQLAlchemyError
 from sqlmodel import Session
 
+from app import crud
 from app.api.routes import visualization_projects
 from app.core.config import settings
 from app.core.db import engine
-from app.models import VisualizationProject
+from app.models import Role, UserCreate, VisualizationProject
 from app.services.storage import LocalStorageBackend, StorageService
+from tests.utils.user import authentication_token_from_email
+from tests.utils.utils import random_email, random_lower_string
 
 
 def _png_bytes(width: int = 64, height: int = 48) -> bytes:
@@ -169,6 +172,38 @@ def test_project_create_requires_authentication(client: TestClient) -> None:
     response = _upload(client, {})
 
     assert response.status_code == 401
+
+
+def test_room_upload_requires_generation_create_permission(
+    client: TestClient,
+    db: Session,
+    local_storage: StorageService,
+) -> None:
+    suffix = random_lower_string()
+    role = Role(
+        name=f"No generation create {suffix}",
+        slug=f"no-generation-create-{suffix}",
+        is_system=False,
+        permissions=[],
+    )
+    db.add(role)
+    db.commit()
+    db.refresh(role)
+    user = crud.create_user(
+        session=db,
+        user_create=UserCreate(email=random_email(), password="test-password-123"),
+        role=role,
+    )
+    headers = authentication_token_from_email(
+        client=client,
+        email=user.email,
+        db=db,
+    )
+
+    response = _upload(client, headers)
+
+    assert response.status_code == 403
+    assert list((local_storage.backend.root / "rooms").glob("*")) == []
 
 
 def test_owner_can_list_and_get_projects_with_newest_first_pagination(
